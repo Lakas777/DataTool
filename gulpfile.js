@@ -12,6 +12,7 @@ var log          = require("gulp-util").log;
 var minifycss    = require("gulp-minify-css");
 var source       = require("vinyl-source-stream");
 var uglify       = require("gulp-uglify");
+var watch        = require("gulp-watch");
 var watchify     = require("watchify");
 
 var error = function(error) {
@@ -108,8 +109,8 @@ gulp.task("lint",       function() { return lint();                     });
 gulp.task("server",     function() { return server();                   });
 
 gulp.task("watch", function() {
-  gulp.watch("./src/**/*.js", function() { gulp.start("lint"); });
-  gulp.watch("./less/*.less", function() { gulp.start("less"); });
+  watch("./src/**/*.js", function() { return gulp.start("lint"); });
+  watch("./less/*.less", function() { return gulp.start("less"); });
 });
 
 gulp.task("default", [ "lint", "less", "watchify", "watch", "server" ]);
