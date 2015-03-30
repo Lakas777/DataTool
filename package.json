@@ -1,0 +1,14 @@
+{
+  "name": "DataBlogTool",
+  "version": "0.0.1",
+  "main": "app.js",
+  "dependencies": {
+    "browser-sync": "^2.5.0",
+    "browserify": "^9.0.3",
+    "d3": "^3.5.5",
+    "gulp": "^3.8.11",
+    "react": "^0.13.1",
+    "react-router": "^0.13.2",
+    "watchify": "^3.0.0"
+  }
+}
