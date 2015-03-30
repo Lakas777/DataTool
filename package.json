@@ -2,13 +2,31 @@
   "name": "DataBlogTool",
   "version": "0.0.1",
   "main": "app.js",
+  "scripts": {
+    "start": "gulp"
+  },
   "dependencies": {
+    "bootstrap": "^3.3.4",
+    "d3": "^3.5.5",
+    "react": "^0.13.1",
+    "react-router": "^0.13.2"
+  },
+  "devDependencies": {
     "browser-sync": "^2.5.0",
     "browserify": "^9.0.3",
-    "d3": "^3.5.5",
+    "chalk": "^1.0.0",
     "gulp": "^3.8.11",
-    "react": "^0.13.1",
-    "react-router": "^0.13.2",
+    "gulp-autoprefixer": "^2.1.0",
+    "gulp-chmod": "^1.2.0",
+    "gulp-if": "^1.2.5",
+    "gulp-jslint": "^0.2.2",
+    "gulp-less": "^3.0.2",
+    "gulp-minify-css": "^1.0.0",
+    "gulp-uglify": "^1.1.0",
+    "gulp-util": "^3.0.4",
+    "less": "^2.4.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.0.0"
   }
 }
