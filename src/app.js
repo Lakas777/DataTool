@@ -1,16 +1,17 @@
 /*global document */
 
-var React  = require("react");
-var Router = require("react-router");
-var api    = require("./api");
+var React          = require("react");
+var Router         = require("react-router");
+var api            = require("./api");
 
-var Route        = React.createFactory(Router.Route);
-var DefaultRoute = React.createFactory(Router.DefaultRoute);
-var RouteHandler = React.createFactory(Router.RouteHandler);
+var Route          = React.createFactory(Router.Route);
+var DefaultRoute   = React.createFactory(Router.DefaultRoute);
+var RouteHandler   = React.createFactory(Router.RouteHandler);
 
-var Header   = React.createFactory(require("./header"));
-var FileList = require("./file-list");
-var FileEdit = require("./file-edit");
+var Header         = React.createFactory(require("./header"));
+var DocumentList   = require("./document-list");
+var DocumentEdit   = require("./document-edit");
+var DocumentCreate = require("./document-create");
 
 var Main = React.createClass({
   render: function() {
@@ -24,8 +25,9 @@ var Main = React.createClass({
 
 var Routes = Route(
   { path: "/", name: "app", handler: Main },
-  DefaultRoute({ handler: FileList }),
-  Route({ path: "/file/?:id", name: "file",  handler: FileEdit })
+  DefaultRoute({ handler: DocumentList }),
+  Route({ path: "/document/new", name: "document-create", handler: DocumentCreate }),
+  Route({ path: "/document/:id", name: "document",        handler: DocumentEdit })
 );
 
 Router.run(Routes, Router.HashLocation, function(Handler, state) {

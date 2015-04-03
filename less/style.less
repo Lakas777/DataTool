@@ -4,6 +4,42 @@
   margin-top: 80px;
 }
 
-.file-row {
+.document-row {
   cursor: pointer;
+}
+
+.document-edit {
+  .left, .right {
+    position:   absolute;
+    top:        50px;
+    bottom:     0;
+    padding:    10px;
+    max-height: 100%;
+    overflow:   hidden;
+  }
+
+  .left {
+    left: 0;
+    right: 50%;
+    background: #ddd;
+  }
+
+  .right {
+    left: 50%;
+    right: 0;
+  }
+}
+
+.tabs .tab {
+  @border-style: 1px solid #ddd;
+
+  padding: 10px;
+
+  border-left:   @border-style;
+  border-right:  @border-style;
+  border-bottom: @border-style;
+}
+
+.data-table {
+  overflow: scroll;
 }

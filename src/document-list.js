@@ -1,37 +1,37 @@
 var React       = require("react");
 var Navigation  = require("react-router").Navigation;
-var CreateClass = require("./addons/react").CreateClass;
+var CreateClass = require("./addons/create-class");
 
-var FileRow = CreateClass({
+var DocumentRow = CreateClass({
   onClickRow: function() {
-    if (this.props.onClickRow) { this.props.onClickRow(this.props.file); }
+    if (this.props.onClickRow) { this.props.onClickRow(this.props.document); }
   },
 
   render: function() {
-    var file = this.props.file;
+    var document = this.props.document;
 
     var row = [
-      file.name
+      document.name
     ].map(function(child, index) {
       return React.DOM.td({ onClick: this.onClickRow, key: index }, child);
     }.bind(this));
 
-    return React.DOM.tr({ className: "file-row" }, row);
+    return React.DOM.tr({ className: "document-row" }, row);
   }
 });
 
-var FileList = CreateClass({
+var DocumentList = CreateClass({
   mixins: [ Navigation ],
 
-  onClickRow: function(file) {
-    this.transitionTo("file", { id: file.id });
+  onClickRow: function(document) {
+    this.transitionTo("document", { id: document.id });
   },
 
   render: function() {
     var data = this.props.data;
 
     return React.DOM.div(
-      { className: "file-list" },
+      { className: "document-list" },
       React.DOM.table(
         { className: "table table-bordered table-hover" },
         React.DOM.thead(
@@ -45,8 +45,8 @@ var FileList = CreateClass({
         ),
         React.DOM.tbody(
           null,
-          data.map(function(file, index) {
-            return FileRow({ key: index, file: file, onClickRow: this.onClickRow });
+          data.map(function(document, index) {
+            return DocumentRow({ key: index, document: document, onClickRow: this.onClickRow });
           }.bind(this))
         )
       )
@@ -54,7 +54,7 @@ var FileList = CreateClass({
   }
 });
 
-var FileListWrapper = React.createClass({
+var DocumentListWrapper = React.createClass({
   getInitialState: function() {
     return { data: [] };
   },
@@ -64,14 +64,14 @@ var FileListWrapper = React.createClass({
   },
 
   getData: function() {
-    this.props.api.getFiles(function(data) {
+    this.props.api.getDocuments(function(data) {
       this.setState({ data: data });
     }.bind(this));
   },
 
   render: function() {
-    return FileList({ data: this.state.data, getData: this.getData });
+    return DocumentList({ data: this.state.data, getData: this.getData });
   }
 });
 
-module.exports = FileListWrapper;
+module.exports = DocumentListWrapper;
