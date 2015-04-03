@@ -9,6 +9,14 @@ var TestData = {
 
   document: {
     name:  "test document",
+    layers: [
+      {
+        name:       "layer 1",
+        fileIndex:  0,
+        columnGeo:  "Województwo",
+        columnData: "KACZYŃSKI Jarosław Aleksander"
+      }
+    ],
     files: [
       { name: "file 1", data: [] },
       { name: "file 2", data: [] },

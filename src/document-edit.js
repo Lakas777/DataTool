@@ -1,51 +1,17 @@
-var React       = require("react");
-var classNames  = require("classnames");
-var CreateClass = require("./addons/create-class");
+var React                  = require("react");
+var CreateClass            = require("./addons/create-class");
 
-var DataTable   = React.createFactory(require("./data-table"));
-
-var TabView = CreateClass({
-  getInitialState: function() {
-    return { activeTab: 0 };
-  },
-
-  onClickTab: function(index) {
-    this.setState({ activeTab: index });
-  },
-
-  render: function() {
-    var activeTab  = this.state.activeTab;
-    var onClickTab = this.onClickTab;
-    var tabs       = this.props.tabs;
-    var Handler    = this.props.handler;
-
-    return React.DOM.div(
-      { className: "tabs", role: "tabpanel" },
-      React.DOM.ul(
-        { className: "nav nav-tabs", role: "tablist" },
-        tabs.map(function(tab, index) {
-          return React.DOM.li(
-            {
-              className: classNames({ "active": index === activeTab }),
-              role: "presentation",
-              key: tab.name
-            },
-            React.DOM.div({ onClick: onClickTab.bind(this, index) }, tab.name)
-          );
-        })
-      ),
-      React.DOM.div(
-        { className: "tab" },
-        Handler(tabs[activeTab])
-      )
-    );
-  }
-});
+var DataTable              = React.createFactory(require("./data-table"));
+var Tabs                   = React.createFactory(require("./tabs"));
+var Toolbox                = React.createFactory(require("./toolbox"));
+var VisualizationGenerator = React.createFactory(require("./visualization-generator"));
 
 var LeftView = CreateClass({
   render: function() {
     return React.DOM.div(
-      { className: "left" }
+      { className: "left" },
+      VisualizationGenerator(),
+      Toolbox(this.props)
     );
   }
 });
@@ -56,9 +22,10 @@ var RightView = CreateClass({
       { className: "right" },
       React.DOM.div(
         { className: "content" },
-        TabView({
-          tabs:    this.props.files || [],
-          handler: DataTable
+        Tabs({
+          tabs:        this.props.files || [],
+          titleGetter: function(tab) { return tab.name; },
+          handler:     function(tab) { return DataTable(tab); }
         })
       )
     );

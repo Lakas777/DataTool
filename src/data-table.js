@@ -13,8 +13,8 @@ var DataTable = React.createClass({
   render: function() {
     var data   = this.props.data || [];
     var keys   = Object.keys(data[0] || {});
-    var height = this.state.window.height - 140;
-    var width  = this.state.window.width / 2;
+    var height = this.state.window.height - 133;
+    var width  = this.state.window.width / 2 + 5;
 
     var columnWidths = keys.reduce(function(memo, key) {
       memo[key] = data.reduce(function(memo, data) {
