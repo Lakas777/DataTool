@@ -9,10 +9,15 @@ var TabView = CreateClass({
     return { activeTab: 0 };
   },
 
+  onClickTab: function(index) {
+    this.setState({ activeTab: index });
+  },
+
   render: function() {
-    var activeTab = this.state.activeTab;
-    var tabs      = this.props.tabs;
-    var Handler   = this.props.handler;
+    var activeTab  = this.state.activeTab;
+    var onClickTab = this.onClickTab;
+    var tabs       = this.props.tabs;
+    var Handler    = this.props.handler;
 
     return React.DOM.div(
       { className: "tabs", role: "tabpanel" },
@@ -25,7 +30,7 @@ var TabView = CreateClass({
               role: "presentation",
               key: tab.name
             },
-            React.DOM.a({ href: "" }, tab.name)
+            React.DOM.div({ onClick: onClickTab.bind(this, index) }, tab.name)
           );
         })
       ),
@@ -40,8 +45,7 @@ var TabView = CreateClass({
 var LeftView = CreateClass({
   render: function() {
     return React.DOM.div(
-      { className: "left" },
-      "PREVIEW"
+      { className: "left" }
     );
   }
 });

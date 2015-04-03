@@ -1,50 +1,53 @@
-var React = require("react");
-var OnResize = require("react-window-mixins").OnResize;
+Object.assign      = require("object-assign");
+
+var React          = require("react");
+var FixedDataTable = require("fixed-data-table");
+var OnResize       = require("react-window-mixins").OnResize;
+
+var Table          = React.createFactory(FixedDataTable.Table);
+var Column         = React.createFactory(FixedDataTable.Column);
 
 var DataTable = React.createClass({
   mixins: [ OnResize ],
 
-  renderHeader: function(header) {
-    return React.DOM.thead(
-      null,
-      React.DOM.tr(
-        null,
-        React.DOM.th(null, "#"),
-        header.map(function(text, index) {
-          return React.DOM.th({ key: index }, text);
-        })
-      )
-    );
-  },
-
-  renderRows: function(data) {
-    console.log(data);
-
-    return React.DOM.tbody(
-      null,
-      data.map(function(data, index) {
-        return React.DOM.tr(
-          { key: index },
-          React.DOM.th(null, index),
-          Object.keys(data).map(function(key) {
-            return React.DOM.th({ key: key }, data[key]);
-          })
-        );
-      })
-    );
-  },
-
   render: function() {
     var data   = this.props.data || [];
-    var header = Object.keys(data[0] || {});
+    var keys   = Object.keys(data[0] || {});
     var height = this.state.window.height - 140;
+    var width  = this.state.window.width / 2;
+
+    var columnWidths = keys.reduce(function(memo, key) {
+      memo[key] = data.reduce(function(memo, data) {
+        var columnWidth = data[key].length * 10;
+        return columnWidth > memo ? columnWidth : memo;
+      }, key.length * 10);
+
+      return memo;
+    }, {});
+
+    var rowGetter = function(index) {
+      return data[index];
+    };
 
     return React.DOM.div(
-      { className: "data-table table-responsive", style: { maxHeight: height } },
-      React.DOM.table(
-        { className: "table table-bordered" },
-        this.renderHeader(header),
-        this.renderRows(data.slice(1, data.length))
+      { className: "data-table" },
+      Table(
+        {
+          headerHeight: 50,
+          rowHeight:    50,
+          rowGetter:    rowGetter,
+          rowsCount:    data.length,
+          width:        width - 40,
+          maxHeight:    height
+        },
+        keys.map(function(key, index) {
+          return Column({
+            key:      index,
+            label:    key,
+            dataKey:  key,
+            width:    columnWidths[key]
+          });
+        })
       )
     );
   }

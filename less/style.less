@@ -1,4 +1,5 @@
-@import "bootstrap/less/bootstrap.less";
+@import "bootstrap/less/bootstrap";
+@import (less) "fixed-data-table/dist/fixed-data-table.css";
 
 .main.container {
   margin-top: 80px;
@@ -21,7 +22,6 @@
   .left {
     left: 0;
     right: 50%;
-    background: #ddd;
   }
 
   .right {
@@ -30,16 +30,43 @@
   }
 }
 
-.tabs .tab {
-  @border-style: 1px solid #ddd;
+.tabs {
+  .tab {
+    @border-style: 1px solid #ddd;
 
-  padding: 10px;
+    padding: 10px;
 
-  border-left:   @border-style;
-  border-right:  @border-style;
-  border-bottom: @border-style;
+    border-left:   @border-style;
+    border-right:  @border-style;
+    border-bottom: @border-style;
+  }
+
+  li > div {
+    padding: 10px;
+    cursor: pointer;
+
+    margin-right: 2px;
+    line-height: @line-height-base;
+    border: 1px solid transparent;
+    border-radius: @border-radius-base @border-radius-base 0 0;
+
+    &:hover {
+      border-color: @nav-tabs-link-hover-border-color @nav-tabs-link-hover-border-color @nav-tabs-border-color;
+    }
+  }
+
+  li.active > div{
+    font-weight: bold;
+    color: @nav-tabs-active-link-hover-color;
+    background-color: @nav-tabs-active-link-hover-bg;
+    border: 1px solid @nav-tabs-active-link-hover-border-color;
+    border-bottom-color: transparent;
+    cursor: default;
+  }
 }
 
 .data-table {
-  overflow: scroll;
+  .public_fixedDataTable_header, .public_fixedDataTable_header .public_fixedDataTableCell_main {
+    background-image: none;
+  }
 }

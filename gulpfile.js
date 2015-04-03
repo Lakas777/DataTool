@@ -1,6 +1,6 @@
 var autoprefixer = require("gulp-autoprefixer");
-var browsersync  = require("browser-sync");
 var browserify   = require("browserify");
+var browsersync  = require("browser-sync");
 var buffer       = require("vinyl-buffer");
 var chalk        = require("chalk");
 var chmod        = require("gulp-chmod");
@@ -10,6 +10,7 @@ var jslint       = require("gulp-jslint");
 var less         = require("gulp-less");
 var log          = require("gulp-util").log;
 var minifycss    = require("gulp-minify-css");
+var rename       = require("gulp-rename");
 var source       = require("vinyl-source-stream");
 var uglify       = require("gulp-uglify");
 var watch        = require("gulp-watch");
