@@ -1,11 +1,15 @@
 var React         = require("react");
+
+var Config        = require("./config");
 var CreateClass   = require("./addons/create-class");
-var Visualization = require("./visualization");
+
+var Visualization = React.createFactory(require("./visualization"));
 
 var VisualizationWrapper = CreateClass({
   render: function() {
     return React.DOM.div(
-      { className: "visualization-wrapper" }
+      { className: "visualization-wrapper" },
+      Visualization()
     );
   }
 });

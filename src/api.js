@@ -3,24 +3,30 @@ var dsv = d3.dsv(";");
 
 var TestData = {
   documents: [
-    { name: "test 1", id: "0001" },
-    { name: "test 2", id: "0002" }
+    { name: "test 1", id: "did0001" },
+    { name: "test 2", id: "did0002" }
   ],
 
   document: {
     name:  "test document",
     layers: [
       {
-        name:       "layer 1",
-        fileIndex:  0,
-        columnGeo:  "Województwo",
-        columnData: "KACZYŃSKI Jarosław Aleksander"
+        id:       "lid0001",
+        name:     "layer 1",
+        fileId:   "did0001",
+        geo:      {
+          column: "Województwo",
+          type:   "province"
+        },
+        vis:      {
+          column: "% głosów ważnych"
+        }
       }
     ],
     files: [
-      { name: "file 1", data: [] },
-      { name: "file 2", data: [] },
-      { name: "file 3", data: [] }
+      { name: "file 1", id: "fid0001", data: [] },
+      { name: "file 2", id: "fid0002", data: [] },
+      { name: "file 3", id: "fid0003", data: [] }
     ]
   }
 };
