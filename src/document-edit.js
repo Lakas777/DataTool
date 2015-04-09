@@ -1,4 +1,6 @@
+var extend                 = require("extend");
 var React                  = require("react");
+var Emitter                = require("events").EventEmitter;
 var CreateClass            = require("./addons/create-class");
 
 var DataTable              = React.createFactory(require("./data-table"));
@@ -10,7 +12,7 @@ var LeftView = CreateClass({
   render: function() {
     return React.DOM.div(
       { className: "left" },
-      VisualizationGenerator(),
+      VisualizationGenerator(this.props),
       Toolbox(this.props)
     );
   }
@@ -33,11 +35,23 @@ var RightView = CreateClass({
 });
 
 var DocumentEdit = CreateClass({
+  getInitialState: function() {
+    return {
+      emitter: new Emitter()
+    };
+  },
+
   render: function() {
+    var viewData = extend(
+      true,
+      this.props.data,
+      { emitter: this.state.emitter }
+    );
+
     return React.DOM.div(
       { className: "document-edit" },
-      LeftView(this.props.data),
-      RightView(this.props.data)
+      LeftView(viewData),
+      RightView(viewData)
     );
   }
 });

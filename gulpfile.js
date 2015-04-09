@@ -103,16 +103,21 @@ var server = function() {
   });
 };
 
+var copy = function() {
+  return gulp.src("./data/*").pipe(gulp.dest("./public/data/"));
+};
+
 gulp.task("browserify", function() { return bundle();                   });
 gulp.task("watchify",   function() { return bundle({ watchify: true }); });
 gulp.task("less",       function() { return compile();                  });
 gulp.task("lint",       function() { return lint();                     });
 gulp.task("server",     function() { return server();                   });
+gulp.task("copy",       function() { return copy();                     });
 
 gulp.task("watch", function() {
   watch("./src/**/*.js", function() { return gulp.start("lint"); });
   watch("./less/*.less", function() { return gulp.start("less"); });
 });
 
-gulp.task("default", [ "lint", "less", "watchify", "watch", "server" ]);
-gulp.task("dist",    [ "browserify", "less" ]);
+gulp.task("default", [ "copy", "lint", "less", "watchify", "watch", "server" ]);
+gulp.task("dist",    [ "copy", "browserify", "less" ]);

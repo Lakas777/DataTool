@@ -9,6 +9,7 @@
     "bootstrap": "^3.3.4",
     "classnames": "^1.2.0",
     "d3": "^3.5.5",
+    "extend": "^2.0.0",
     "fixed-data-table": "^0.1.2",
     "gulp-watch": "^4.2.2",
     "object-assign": "^2.0.0",

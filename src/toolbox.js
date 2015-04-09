@@ -1,6 +1,7 @@
 var React       = require("react");
 var classNames  = require("classnames");
 var CreateClass = require("./addons/create-class");
+var Config      = require("./config");
 
 var Tabs        = React.createFactory(require("./tabs"));
 
@@ -9,6 +10,10 @@ var SelectionView = CreateClass({
     return {
       getter: function(d) { return d; }
     };
+  },
+
+  componentDidMount: function() {
+    this.props.onChange({ target: { value: this.props.selectedIndex || 0 } });
   },
 
   render: function() {
@@ -21,9 +26,8 @@ var SelectionView = CreateClass({
           value:     this.props.selectedIndex,
           onChange:  this.props.onChange
         },
-        React.DOM.option({ disabled: true, hidden: true, value: 0 }),
         this.props.data.map(function(d, index) {
-          return React.DOM.option({ key: index, value: index + 1 }, this.props.getter(d));
+          return React.DOM.option({ key: index, value: index }, this.props.getter(d));
         }.bind(this))
       )
     );
@@ -34,7 +38,7 @@ var ToolboxVisData = CreateClass({
   getInitialState: function() {
     return {
       selectedColumnIndex: null
-    }
+    };
   },
 
   parentOnSelectionChange: function() {
@@ -43,8 +47,9 @@ var ToolboxVisData = CreateClass({
     });
   },
 
-  onChangeColumn: function(e) {
-    this.setState({ selectedColumnIndex: parseInt(e.target.value, 10) }, this.parentOnSelectionChange);
+  onChangeColumn: function(event) {
+    var index = event.target.value !== null ? +event.target.value : null;
+    this.setState({ selectedColumnIndex: index }, this.parentOnSelectionChange);
   },
 
   render: function() {
@@ -72,8 +77,7 @@ var ToolboxGeoData = CreateClass({
   getInitialState: function() {
     return {
       selectedColumnIndex: null,
-      selectedTypeIndex:   null,
-      typeData:            [ "województwa", "powiaty", "gminy", "miasta" ]
+      selectedTypeIndex:   null
     };
   },
 
@@ -82,17 +86,19 @@ var ToolboxGeoData = CreateClass({
       this.props.onSelectionChange({
         selectedColumnIndex: this.state.selectedColumnIndex,
         selectedTypeIndex:   this.state.selectedTypeIndex,
-        typeName:            this.state.typeData[this.state.selectedTypeIndex]
+        dataType:            Config.dataTypes[this.state.selectedTypeIndex]
       });
     }
   },
 
-  onChangeColumn: function(e) {
-    this.setState({ selectedColumnIndex: parseInt(e.target.value, 10) }, this.parentOnSelectionChange);
+  onChangeColumn: function(event) {
+    var index = event.target.value !== null ? +event.target.value : null;
+    this.setState({ selectedColumnIndex: index }, this.parentOnSelectionChange);
   },
 
-  onChangeType: function(e) {
-    this.setState({ selectedTypeIndex: parseInt(e.target.value, 10) }, this.parentOnSelectionChange);
+  onChangeType: function(event) {
+    var index = event.target.value !== null ? +event.target.value : null;
+    this.setState({ selectedTypeIndex: index }, this.parentOnSelectionChange);
   },
 
   render: function() {
@@ -116,7 +122,8 @@ var ToolboxGeoData = CreateClass({
           className:     "col-sm-6",
           selectedIndex: this.state.selectedTypeIndex,
           onChange:      this.onChangeType,
-          data:          this.state.typeData
+          getter:        function(d) { return d.name; },
+          data:          Config.dataTypes
         })
       )
     );
@@ -138,7 +145,8 @@ var ToolboxFileChoose = CreateClass({
   },
 
   onChangeFile: function(event) {
-    this.setState({ selectedFileIndex: parseInt(event.target.value, 10)}, this.parentOnFileChoose);
+    var index = event.target.value !== null ? +event.target.value : null;
+    this.setState({ selectedFileIndex: index }, this.parentOnFileChoose);
   },
 
   render: function() {
@@ -167,34 +175,53 @@ var ToolboxTab = CreateClass({
     };
   },
 
-  onFileChoose: function(e) {
-    this.setState({ selectedFileIndex: e.index });
+  onFileChoose: function(event) {
+    this.setState({ selectedFileIndex: event.index }, this.updateVisualization);
   },
 
-  onSelectionChangeGeoData: function(e) {
+  onSelectionChangeGeoData: function(event) {
     this.setState({
-      selectedGeoColumnIndex: e.selectedColumnIndex,
-      selectedGeoTypeIndex: e.selectedTypeIndex
-    });
+      selectedGeoColumnIndex: event.selectedColumnIndex,
+      selectedGeoTypeIndex:   event.selectedTypeIndex
+    }, this.updateVisualization);
   },
 
-  onSelectionChangeVis: function(e) {
+  onSelectionChangeVisData: function(event) {
     this.setState({
-      selectedVisColumnIndex: e.selectedColumnIndex,
-      selectedVisTypeIndex: e.selectedTypeIndex
-    });
+      selectedVisColumnIndex: event.selectedColumnIndex
+    }, this.updateVisualization);
+  },
+
+  updateVisualization: function() {
+    var hasAllFields = [
+      "selectedFileIndex",
+      "selectedGeoColumnIndex",
+      "selectedGeoTypeIndex",
+      "selectedVisColumnIndex"
+    ].reduce(function(memo, key) {
+      return memo && this.state[key] !== null && this.state[key] !== undefined;
+    }.bind(this), true);
+
+    if (hasAllFields) {
+      this.props.emitter.emit("visualization:data", this.state);
+    }
   },
 
   render: function() {
+    var showDataPanels = [
+      this.state.selectedFileIndex !== null,
+      this.props.columns.length > 0
+    ].reduce(function(memo, test) { return memo && test; }, true);
+
     return React.DOM.div(
       { className: "toolbox-tab" },
       ToolboxFileChoose({ files: this.props.columns, onFileChoose: this.onFileChoose }),
-      this.state.selectedFileIndex !== null ? ToolboxGeoData({
-        columns: this.props.columns[this.state.selectedFileIndex].columns,
+      showDataPanels ? ToolboxGeoData({
+        columns:           this.props.columns[this.state.selectedFileIndex].columns,
         onSelectionChange: this.onSelectionChangeGeoData
       }) : null,
-      this.state.selectedFileIndex !== null ? ToolboxVisData({
-        columns: this.props.columns[this.state.selectedFileIndex].columns,
+      showDataPanels ? ToolboxVisData({
+        columns:           this.props.columns[this.state.selectedFileIndex].columns,
         onSelectionChange: this.onSelectionChangeVisData
       }) : null
     );
@@ -212,6 +239,7 @@ var Toolbox = React.createClass({
   },
 
   render: function() {
+    var emitter = this.props.emitter;
     var columns = this.columnData(this.props.files || []);
 
     return React.DOM.div(
@@ -220,7 +248,11 @@ var Toolbox = React.createClass({
         tabs:        this.props.layers || [],
         titleGetter: function(tab) { return tab.name; },
         handler:     function(tab) {
-          return ToolboxTab({ layer: tab, columns: columns });
+          return ToolboxTab({
+            layer:   tab,
+            columns: columns,
+            emitter: emitter
+          });
         }
       })
     );
