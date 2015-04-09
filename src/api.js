@@ -13,7 +13,7 @@ var TestData = {
       {
         id:       "lid0001",
         name:     "layer 1",
-        fileId:   "did0001",
+        fileId:   "fid0002",
         geo:      {
           column: "Województwo",
           type:   "province"
@@ -38,7 +38,7 @@ module.exports = {
 
   getDocument: function(id, callback) {
     dsv("data/sample-data-1.csv", function(error, data) {
-      console.log("get", id, error);
+      console.log("API getDocument", id, error);
 
       TestData.document.files.forEach(function(file) {
         file.data = data;
@@ -46,5 +46,10 @@ module.exports = {
 
       callback(TestData.document);
     });
+  },
+
+  updateDocument: function(document, callback) {
+    console.log("API updateDocument", document);
+    if (callback) { callback(); }
   }
 };

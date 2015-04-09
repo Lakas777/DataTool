@@ -1,7 +1,7 @@
 var extend                 = require("extend");
 var React                  = require("react");
-var Emitter                = require("events").EventEmitter;
 var CreateClass            = require("./addons/create-class");
+var indexOfProp            = require("./addons/index-of-prop");
 
 var DataTable              = React.createFactory(require("./data-table"));
 var Tabs                   = React.createFactory(require("./tabs"));
@@ -35,18 +35,16 @@ var RightView = CreateClass({
 });
 
 var DocumentEdit = CreateClass({
-  getInitialState: function() {
-    return {
-      emitter: new Emitter()
-    };
+  onLayerDataUpdate: function(data) {
+    this.props.onLayerDataUpdate(data);
   },
 
   render: function() {
-    var viewData = extend(
-      true,
-      this.props.data,
-      { emitter: this.state.emitter }
-    );
+    var viewData = {
+      files: this.props.data.files,
+      layers: this.props.data.layers,
+      onLayerDataUpdate: this.onLayerDataUpdate
+    };
 
     return React.DOM.div(
       { className: "document-edit" },
@@ -77,8 +75,24 @@ var DocumentEditWrapper = React.createClass({
     }.bind(this));
   },
 
+  onLayerDataUpdate: function(data) {
+    var document = this.state.data;
+    var index    = indexOfProp(document.layers, "id", data.id);
+
+    if (index >= 0) {
+      document.layers[index] = extend(document.layers[index], data);
+
+      this.setState({ data: document });
+      this.props.api.updateDocument(document);
+    }
+  },
+
   render: function() {
-    return DocumentEdit({ data: this.state.data, getData: this.getData });
+    return DocumentEdit({
+      data:              this.state.data,
+      getData:           this.getData,
+      onLayerDataUpdate: this.onLayerDataUpdate
+    });
   }
 });
 

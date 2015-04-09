@@ -24,16 +24,8 @@ var VisualizationGenerator = React.createClass({
     };
   },
 
-  componentDidMount: function() {
-    this.props.emitter.on("visualization:data", function(data) {
-      console.log("emitter visualization:data", data);
-      this.setState(data);
-    }.bind(this));
-  },
-
   render: function() {
-    // var visualizationData = {
-    // };
+    console.log("vis props", this.props);
 
     return React.DOM.div(
       { className: "visualization-generator" },

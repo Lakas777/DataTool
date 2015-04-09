@@ -1,44 +1,75 @@
-var React       = require("react");
-var classNames  = require("classnames");
-var getKey      = require("./addons/get-key");
-var CreateClass = require("./addons/create-class");
-var Config      = require("./config");
+var extend                 = require("extend");
+var React                  = require("react");
+var PureRenderMixin        = require("react/addons").PureRenderMixin;
+var classNames             = require("classnames");
 
-var Tabs        = React.createFactory(require("./tabs"));
+var Config                 = require("./config");
+
+var Tabs                   = React.createFactory(require("./tabs"));
+
+var getKey                 = require("./addons/get-key");
+var CreateClass            = require("./addons/create-class");
+var objectWithoutEmptyKeys = require("./addons/object-without-empty-keys");
 
 var SelectionView = CreateClass({
-  getDefaultProps: function() {
+  mixins: [ PureRenderMixin ],
+
+  getInitialState: function() {
     return {
-      nameGetter:  function(d) { return d; },
-      valueGetter: function(data, i) { return data[i]; }
+      selected: this.props.selected
     };
   },
 
+  getDefaultProps: function() {
+    return {
+      selected:    undefined,
+      nameGetter:  function(d) { return d; },
+      valueGetter: function(d) { return d; }
+    };
+  },
+
+  componentWillReceiveProps: function(nextProps) {
+    if (nextProps.selected !== this.state.selected) {
+      this.setState({ selected: nextProps.selected });
+    }
+  },
+
   componentDidMount: function() {
-    this.onChange({ target: { value: 0 } });
+    if (this.props.selected === undefined) {
+      this.onChange({ target: { value: 0 } });
+    }
   },
 
   onChange: function(event) {
     var value = event.target.value;
-    value = value !== null && value !== undefined ? +event.target.value : undefined;
 
-    if (value !== undefined) {
-      var onChangeData = this.props.valueGetter(this.props.data, value);
-      this.props.onChange(onChangeData);
+    if (value !== undefined && value !== null) {
+      this.setState({ selected: value }, function() {
+        this.props.onChange(value);
+      }.bind(this));
     }
   },
 
   render: function() {
+    var data = this.props.data || [];
+
     return React.DOM.div(
       { className: classNames("form-group", this.props.className) },
       React.DOM.label({ className: this.props.labelClassName }, this.props.name),
       React.DOM.select(
         {
           className: "form-control",
+          value:     this.state.selected,
           onChange:  this.onChange
         },
-        this.props.data.map(function(d, index) {
-          return React.DOM.option({ key: index, value: index }, this.props.nameGetter(d));
+        data.map(function(d, index) {
+          return React.DOM.option(
+            {
+              key:   index,
+              value: this.props.valueGetter(d)
+            },
+            this.props.nameGetter(d)
+          );
         }.bind(this))
       )
     );
@@ -46,16 +77,10 @@ var SelectionView = CreateClass({
 });
 
 var ToolboxVisData = CreateClass({
-  getInitialState: function() {
-    return { selectedColumnName: null };
-  },
-
-  parentOnSelectionChange: function() {
-    this.props.onSelectionChange({ selectedColumnName: this.state.selectedColumnName });
-  },
+  mixins: [ PureRenderMixin ],
 
   onChangeColumn: function(columnName) {
-    this.setState({ selectedColumnName: columnName }, this.parentOnSelectionChange);
+    this.props.onSelectionChange({ selectedColumnName: columnName });
   },
 
   render: function() {
@@ -70,6 +95,7 @@ var ToolboxVisData = CreateClass({
         SelectionView({
           name:          "Kolumna:",
           className:     "col-sm-6",
+          selected:      this.props.selected,
           onChange:      this.onChangeColumn,
           data:          this.props.columns
         })
@@ -79,29 +105,14 @@ var ToolboxVisData = CreateClass({
 });
 
 var ToolboxGeoData = CreateClass({
-  getInitialState: function() {
-    return {
-      selectedColumnName: null,
-      selectedTypeKey:    null
-    };
-  },
-
-  parentOnSelectionChange: function() {
-    var state = this.state;
-
-    var hasAllKeys = Object.keys(state).reduce(function(memo, key) {
-      return memo && state[key];
-    }, true);
-
-    if (hasAllKeys) { this.props.onSelectionChange(state); }
-  },
+  mixins: [ PureRenderMixin ],
 
   onChangeColumn: function(columnName) {
-    this.setState({ selectedColumnName: columnName }, this.parentOnSelectionChange);
+    this.props.onSelectionChange({ selectedColumnName: columnName });
   },
 
   onChangeType: function(typeKey) {
-    this.setState({ selectedTypeKey: typeKey }, this.parentOnSelectionChange);
+    this.props.onSelectionChange({ selectedTypeKey: typeKey });
   },
 
   render: function() {
@@ -116,15 +127,17 @@ var ToolboxGeoData = CreateClass({
         SelectionView({
           name:          "Kolumna:",
           className:     "col-sm-6",
+          selected:      this.props.selectedColumn,
           onChange:      this.onChangeColumn,
           data:          this.props.columns
         }),
         SelectionView({
           name:          "Typ:",
           className:     "col-sm-6",
+          selected:      this.props.selectedType,
           onChange:      this.onChangeType,
           nameGetter:    function(d) { return d.name; },
-          valueGetter:   function(data, i) { return data[i].key; },
+          valueGetter:   function(d) { return d.key; },
           data:          Config.dataTypes
         })
       )
@@ -133,16 +146,10 @@ var ToolboxGeoData = CreateClass({
 });
 
 var ToolboxFileChoose = CreateClass({
-  getInitialState: function() {
-    return { selectedFileId: null };
-  },
-
-  parentOnFileChoose: function() {
-    this.props.onFileChoose({ id: this.state.selectedFileId });
-  },
+  mixins: [ PureRenderMixin ],
 
   onChangeFile: function(fileId) {
-    this.setState({ selectedFileId: fileId }, this.parentOnFileChoose);
+    this.props.onSelectionChange({ selectedFileId: fileId });
   },
 
   render: function() {
@@ -156,8 +163,9 @@ var ToolboxFileChoose = CreateClass({
           labelClassName: "col-sm-2",
           onChange:       this.onChangeFile,
           data:           this.props.files,
+          selected:       this.props.selected,
           nameGetter:     function(d) { return d.file.name; },
-          valueGetter:    function(data, i) { return getKey(data, [ i, "file", "id" ]); }
+          valueGetter:    function(d) { return d.file.id; }
         })
       )
     );
@@ -165,33 +173,30 @@ var ToolboxFileChoose = CreateClass({
 });
 
 var ToolboxTab = CreateClass({
-  getInitialState: function() {
-    return { fileId: null };
-  },
-
-  onFileChoose: function(event) {
-    this.setState({ fileId: event.id }, this.updateVisualization);
+  onSelectionChangeFile: function(event) {
+    this.props.onSelectionFile({
+      id:     this.props.layerId,
+      fileId: event.selectedFileId
+    });
   },
 
   onSelectionChangeGeoData: function(event) {
-    this.setState({
-      geo: {
+    this.props.onSelectionGeoData({
+      id:  this.props.layerId,
+      geo: objectWithoutEmptyKeys({
         column: event.selectedColumnName,
         type:   event.selectedTypeKey
-      }
-    }, this.updateVisualization);
+      })
+    });
   },
 
   onSelectionChangeVisData: function(event) {
-    this.setState({
-      vis: {
+    this.props.onSelectionVisData({
+      id:  this.props.layerId,
+      vis: objectWithoutEmptyKeys({
         column: event.selectedColumnName
-      }
-    }, this.updateVisualization);
-  },
-
-  updateVisualization: function() {
-    console.log("TODO: updateVisualization", this.state, this.props);
+      })
+    });
   },
 
   render: function() {
@@ -206,29 +211,41 @@ var ToolboxTab = CreateClass({
     }.bind(this);
 
     var files            = this.props.columns;
-    var dataPanelColumns = getKey(fileForId(this.state.fileId), "columns");
+    var dataPanelColumns = getKey(fileForId(this.props.fileId), "columns");
 
     var showFilePanel  = files.length > 0;
     var showDataPanels = [
-      this.state.fileId,
+      this.props.fileId,
       this.props.columns.length > 0
     ].reduce(function(memo, test) { return memo && test; }, true);
 
     return React.DOM.div(
       { className: "toolbox-tab" },
       showNode(showFilePanel, ToolboxFileChoose({
-        files:        files,
-        onFileChoose: this.onFileChoose
+        files:             files,
+        selected:          this.props.fileId,
+        onSelectionChange: this.onSelectionChangeFile
       })),
       showNode(showDataPanels, [
-        ToolboxGeoData({ key: "geodata", columns: dataPanelColumns, onSelectionChange: this.onSelectionChangeGeoData }),
-        ToolboxVisData({ key: "visdata", columns: dataPanelColumns, onSelectionChange: this.onSelectionChangeVisData })
+        ToolboxGeoData({
+          key:               "geodata",
+          columns:           dataPanelColumns,
+          selectedColumn:    this.props.geo.column,
+          selectedType:      this.props.geo.type,
+          onSelectionChange: this.onSelectionChangeGeoData
+        }),
+        ToolboxVisData({
+          key:               "visdata",
+          columns:           dataPanelColumns,
+          selected:          this.props.vis.column,
+          onSelectionChange: this.onSelectionChangeVisData
+        })
       ])
     );
   }
 });
 
-var Toolbox = React.createClass({
+var ToolboxWrapper = React.createClass({
   columnData: function(files) {
     return files.reduce(function(memo, file) {
       return memo.concat([{
@@ -241,8 +258,19 @@ var Toolbox = React.createClass({
     }, []);
   },
 
+  onSelectionFile: function(data) {
+    this.props.onLayerDataUpdate(data);
+  },
+
+  onSelectionGeoData: function(data) {
+    this.props.onLayerDataUpdate(data);
+  },
+
+  onSelectionVisData: function(data) {
+    this.props.onLayerDataUpdate(data);
+  },
+
   render: function() {
-    var emitter = this.props.emitter;
     var columns = this.columnData(this.props.files || []);
 
     return React.DOM.div(
@@ -251,15 +279,20 @@ var Toolbox = React.createClass({
         tabs:        this.props.layers || [],
         titleGetter: function(tab) { return tab.name; },
         handler:     function(tab) {
-          return ToolboxTab({
-            layer:   tab,
-            columns: columns,
-            emitter: emitter
-          });
-        }
+          return tab ? ToolboxTab({
+            layerId:            tab.id,
+            fileId:             tab.fileId,
+            geo:                tab.geo,
+            vis:                tab.vis,
+            columns:            columns,
+            onSelectionFile:    this.onSelectionFile,
+            onSelectionGeoData: this.onSelectionGeoData,
+            onSelectionVisData: this.onSelectionVisData
+          }) : null;
+        }.bind(this)
       })
     );
   }
 });
 
-module.exports = Toolbox;
+module.exports = ToolboxWrapper;
