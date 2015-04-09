@@ -3,47 +3,94 @@ var CreateClass = require("./addons/create-class");
 
 var Tabs        = React.createFactory(require("./tabs"));
 
-var ToolboxTab = CreateClass({
+var ToolboxColumnChoose = CreateClass({
   getInitialState: function() {
     return {
-      selectedFileIndex: null
+      selectedFileIndex:   null,
+      selectedColumnIndex: null
     };
   },
 
-  onChangeFile: function(event) {
-    this.setState({ selectedFileIndex: event.target.value });
+  componentWillReceiveProps: function(nextProps) {
+    if (nextProps.columns.length !== this.props.columns.length) {
+      this.setState({ selectedFileIndex: 0, selectedColumnIndex: 0 }, this.updateParent);
+    }
   },
 
-  renderColumnSelection: function(columns) {
+  updateParent: function() {
+    var selectedFileIndex = this.state.selectedFileIndex;
+    var selectedColumnIndex = this.state.selectedColumnIndex;
+
+    this.props.onChangeColumn({
+      selectedFileIndex:   selectedFileIndex,
+      selectedColumnIndex: selectedColumnIndex,
+      name:                this.props.columns[selectedFileIndex].columns[selectedColumnIndex]
+    });
+  },
+
+  onChangeFile: function(event) {
+    this.setState({ selectedFileIndex: parseInt(event.target.value, 10) }, this.updateParent);
+  },
+
+  onChangeColumn: function(event) {
+    this.setState({ selectedColumnIndex: parseInt(event.target.value, 10) }, this.updateParent);
+  },
+
+  renderSelection: function(options) {
     return React.DOM.div(
-      null,
-      JSON.stringify(columns, null, 2)
+      { className: "form-group col-sm-6" },
+      React.DOM.label({ className: "col-sm-3" }, options.name),
+      React.DOM.select(
+        {
+          className: "form-control col-sm-9",
+          value:     options.selectedIndex,
+          onChange:  options.onChange
+        },
+        options.data.map(function(d, index) {
+          return React.DOM.option({ key: index, value: index }, options.getter(d));
+        })
+      )
     );
   },
 
-  render: function() {
-    var selectedFileIndex = this.state.selectedFileIndex;
-    var columns           = this.props.columns;
-    var selectedColumn    = this.props.columns[this.state.selectedFileIndex];
-    console.log(columns[selectedFileIndex]);
+  renderFiles: function() {
+    return this.renderSelection({
+      name:          "Arkusz:",
+      selectedIndex: this.state.selectedFileIndex,
+      onChange:      this.onChangeFile,
+      data:          this.props.columns,
+      getter:        function(d) { return d.file; }
+    });
+  },
 
+  renderColumns: function() {
+    return this.renderSelection({
+      name:          "Kolumna:",
+      selectedIndex: this.state.selectedColumnIndex,
+      onChange:      this.onChangeColumn,
+      data:          this.props.columns[this.state.selectedFileIndex].columns,
+      getter:        function(d) { return d; }
+    });
+  },
+
+  render: function() {
+    return React.DOM.div(
+      { className: "toolbox-tab form-inline" },
+      this.renderFiles(),
+      this.state.selectedFileIndex !== null ? this.renderColumns() : null
+    );
+  }
+});
+
+var ToolboxTab = CreateClass({
+  onChangeColumn: function(e) {
+    console.log(e);
+  },
+
+  render: function() {
     return React.DOM.div(
       { className: "toolbox-tab" },
-      React.DOM.div(
-        { className: "form-group" },
-        React.DOM.label(null, "Arkusz"),
-        React.DOM.select(
-          {
-            className: "form-control",
-            value: selectedFileIndex,
-            onChange: this.onChangeFile
-          },
-          columns.map(function(column, index) {
-            return React.DOM.option({ key: index, value: index }, column.file);
-          })
-        )
-      ),
-      selectedColumn ? this.renderColumnSelection(selectedColumn) : null
+      ToolboxColumnChoose({ columns: this.props.columns, onChangeColumn: this.onChangeColumn })
     );
   }
 });
