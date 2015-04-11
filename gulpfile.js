@@ -86,6 +86,7 @@ var lint = function() {
       nomen:      true,
       regexp:     true,
       sloppy:     true,
+      todo:       true,
       vars:       true,
       white:      true
     }))

@@ -28,7 +28,10 @@ var Tabs = React.createClass({
         React.Children.map(this.props.children, function(child, index) {
           return React.DOM.li(
             {
-              className: classNames({ "active": index === activeTab }),
+              className: classNames(
+                { "active": index === activeTab },
+                child.props.className
+              ),
               role:      "presentation",
               key:       index
             },

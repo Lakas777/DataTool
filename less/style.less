@@ -97,7 +97,66 @@
 
     .form-inline label {
       padding-top: 8px;
-      text-align: right;
+      text-align:  right;
+    }
+  }
+}
+
+.new-file-tab-button {
+  float:       right !important;
+  font-weight: bold;
+
+  > div {
+    margin-right: 0 !important;
+  }
+}
+
+.upload-form {
+  max-width: 640px;
+  margin: 0 auto;
+
+  .file-caption {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .btn > span {
+    padding-left: 8px;
+  }
+
+  .btn-file {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+  }
+
+  .progress {
+    margin-top: 10px;
+  }
+}
+
+.upload-new-file {
+  .delimiter-select {
+    margin-top: 20px;
+
+    label {
+      padding-top: 8px;
+      text-align:  right;
     }
   }
 }

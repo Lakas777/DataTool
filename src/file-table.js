@@ -1,14 +1,15 @@
-Object.assign      = require("object-assign");
+Object.assign       = require("object-assign");
 
-var React          = require("react");
-var FixedDataTable = require("fixed-data-table");
-var OnResize       = require("react-window-mixins").OnResize;
+var React           = require("react");
+var PureRenderMixin = require("react/addons").PureRenderMixin;
+var FixedDataTable  = require("fixed-data-table");
+var OnResize        = require("react-window-mixins").OnResize;
 
-var Table          = React.createFactory(FixedDataTable.Table);
-var Column         = React.createFactory(FixedDataTable.Column);
+var Table           = React.createFactory(FixedDataTable.Table);
+var Column          = React.createFactory(FixedDataTable.Column);
 
-var DataTable = React.createClass({
-  mixins: [ OnResize ],
+var FileTable = React.createClass({
+  mixins: [ OnResize, PureRenderMixin ],
 
   render: function() {
     var data   = this.props.data || [];
@@ -53,4 +54,4 @@ var DataTable = React.createClass({
   }
 });
 
-module.exports = DataTable;
+module.exports = FileTable;

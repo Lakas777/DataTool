@@ -6,75 +6,11 @@ var classNames             = require("classnames");
 var Config                 = require("./config");
 
 var Tabs                   = React.createFactory(require("./tabs"));
+var Selection              = React.createFactory(require("./selection"));
 
-var getKey                 = require("./addons/get-key");
 var CreateClass            = require("./addons/create-class");
+var getKey                 = require("./addons/get-key");
 var objectWithoutEmptyKeys = require("./addons/object-without-empty-keys");
-
-var SelectionView = CreateClass({
-  mixins: [ PureRenderMixin ],
-
-  getInitialState: function() {
-    return {
-      selected: this.props.selected
-    };
-  },
-
-  getDefaultProps: function() {
-    return {
-      selected:    undefined,
-      nameGetter:  function(d) { return d; },
-      valueGetter: function(d) { return d; }
-    };
-  },
-
-  componentWillReceiveProps: function(nextProps) {
-    if (nextProps.selected !== this.state.selected) {
-      this.setState({ selected: nextProps.selected });
-    }
-  },
-
-  componentDidMount: function() {
-    if (this.props.selected === undefined) {
-      this.onChange({ target: { value: 0 } });
-    }
-  },
-
-  onChange: function(event) {
-    var value = event.target.value;
-
-    if (value !== undefined && value !== null) {
-      this.setState({ selected: value }, function() {
-        this.props.onChange(value);
-      }.bind(this));
-    }
-  },
-
-  render: function() {
-    var data = this.props.data || [];
-
-    return React.DOM.div(
-      { className: classNames("form-group", this.props.className) },
-      React.DOM.label({ className: this.props.labelClassName }, this.props.name),
-      React.DOM.select(
-        {
-          className: "form-control",
-          value:     this.state.selected,
-          onChange:  this.onChange
-        },
-        data.map(function(d, index) {
-          return React.DOM.option(
-            {
-              key:   index,
-              value: this.props.valueGetter(d)
-            },
-            this.props.nameGetter(d)
-          );
-        }.bind(this))
-      )
-    );
-  }
-});
 
 var ToolboxVisData = CreateClass({
   mixins: [ PureRenderMixin ],
@@ -92,7 +28,7 @@ var ToolboxVisData = CreateClass({
       ),
       React.DOM.div(
         { className: "panel-body" },
-        SelectionView({
+        Selection({
           name:          "Kolumna:",
           className:     "col-sm-6",
           selected:      this.props.selected,
@@ -124,14 +60,14 @@ var ToolboxGeoData = CreateClass({
       ),
       React.DOM.div(
         { className: "panel-body" },
-        SelectionView({
+        Selection({
           name:          "Kolumna:",
           className:     "col-sm-6",
           selected:      this.props.selectedColumn,
           onChange:      this.onChangeColumn,
           data:          this.props.columns
         }),
-        SelectionView({
+        Selection({
           name:          "Typ:",
           className:     "col-sm-6",
           selected:      this.props.selectedType,
@@ -157,7 +93,7 @@ var ToolboxFileChoose = CreateClass({
       { className: "panel panel-default toolbox-file-choose" },
       React.DOM.div(
         { className: "panel-body form-inline" },
-        SelectionView({
+        Selection({
           name:           "Arkusz:",
           className:      "col-sm-9",
           labelClassName: "col-sm-2",
