@@ -2,6 +2,12 @@ var React      = require("react");
 var classNames = require("classnames");
 
 var Tabs = React.createClass({
+  getDefaultProps: function() {
+    return {
+      titleGetter: function(child) { return child.name; }
+    };
+  },
+
   getInitialState: function() {
     return { activeTab: 0 };
   },
@@ -12,31 +18,28 @@ var Tabs = React.createClass({
 
   render: function() {
     var activeTab   = this.state.activeTab;
-
-    var onClickTab  = this.onClickTab;
-    var tabs        = this.props.tabs;
     var titleGetter = this.props.titleGetter;
-    var handler     = this.props.handler;
+    var onClickTab  = this.onClickTab;
 
     return React.DOM.div(
       { className: "tabs", role: "tabpanel" },
       React.DOM.ul(
         { className: "nav nav-tabs", role: "tablist" },
-        tabs.map(function(tab, index) {
+        React.Children.map(this.props.children, function(child, index) {
           return React.DOM.li(
             {
               className: classNames({ "active": index === activeTab }),
               role:      "presentation",
               key:       index
             },
-            React.DOM.div({ onClick: onClickTab.bind(null, index) }, titleGetter(tab))
+            React.DOM.div(
+              { onClick: onClickTab.bind(null, index) },
+              titleGetter(child.props)
+            )
           );
         })
       ),
-      React.DOM.div(
-        { className: "tab" },
-        handler(tabs[activeTab])
-      )
+      React.DOM.div({ className: "tab" }, this.props.children[activeTab])
     );
   }
 });

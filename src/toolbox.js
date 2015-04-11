@@ -272,14 +272,16 @@ var ToolboxWrapper = React.createClass({
 
   render: function() {
     var columns = this.columnData(this.props.files || []);
+    var layers  = this.props.layers || [];
 
     return React.DOM.div(
       { className: "toolbox" },
-      Tabs({
-        tabs:        this.props.layers || [],
-        titleGetter: function(tab) { return tab.name; },
-        handler:     function(tab) {
-          return tab ? ToolboxTab({
+      Tabs(
+        null,
+        layers.map(function(tab, index) {
+          return ToolboxTab({
+            key:                index,
+            name:               tab.name,
             layerId:            tab.id,
             fileId:             tab.fileId,
             geo:                tab.geo,
@@ -288,9 +290,9 @@ var ToolboxWrapper = React.createClass({
             onSelectionFile:    this.onSelectionFile,
             onSelectionGeoData: this.onSelectionGeoData,
             onSelectionVisData: this.onSelectionVisData
-          }) : null;
-        }.bind(this)
-      })
+          });
+        }.bind(this))
+      )
     );
   }
 });

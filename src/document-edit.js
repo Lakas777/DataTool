@@ -1,5 +1,6 @@
 var extend                 = require("extend");
 var React                  = require("react");
+var PureRenderMixin        = require("react/addons").PureRenderMixin;
 var CreateClass            = require("./addons/create-class");
 var indexOfProp            = require("./addons/index-of-prop");
 
@@ -19,16 +20,18 @@ var LeftView = CreateClass({
 });
 
 var RightView = CreateClass({
+  mixins: [ PureRenderMixin ],
+
   render: function() {
+    var files = this.props.files || [];
+
     return React.DOM.div(
       { className: "right" },
       React.DOM.div(
         { className: "content" },
-        Tabs({
-          tabs:        this.props.files || [],
-          titleGetter: function(tab) { return tab.name; },
-          handler:     function(tab) { return DataTable(tab); }
-        })
+        Tabs(null, files.map(function(file, index) {
+          return DataTable(extend({ key: index }, file));
+        }))
       )
     );
   }
@@ -41,8 +44,8 @@ var DocumentEdit = CreateClass({
 
   render: function() {
     var viewData = {
-      files: this.props.data.files,
-      layers: this.props.data.layers,
+      files:             this.props.data.files,
+      layers:            this.props.data.layers,
       onLayerDataUpdate: this.onLayerDataUpdate
     };
 
