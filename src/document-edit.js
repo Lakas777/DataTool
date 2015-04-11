@@ -1,11 +1,13 @@
 var extend                 = require("extend");
 var React                  = require("react");
 var PureRenderMixin        = require("react/addons").PureRenderMixin;
-var CreateClass            = require("./addons/create-class");
 var indexOfProp            = require("./addons/index-of-prop");
+var CreateClass            = require("./addons/create-class");
+var CSSTransitionGroup     = require("./addons/css-transition-group");
 
-var FileTable              = React.createFactory(require("./file-table"));
 var FileNew                = React.createFactory(require("./file-new"));
+var FileTable              = React.createFactory(require("./file-table"));
+var Modal                  = React.createFactory(require("./modal"));
 var Tabs                   = React.createFactory(require("./tabs"));
 var Toolbox                = React.createFactory(require("./toolbox"));
 var VisualizationGenerator = React.createFactory(require("./visualization-generator"));
@@ -23,8 +25,49 @@ var LeftView = CreateClass({
 var RightView = CreateClass({
   mixins: [ PureRenderMixin ],
 
+  getInitialState: function() {
+    return { modal: null };
+  },
+
   onFileDataUpdate: function(data) {
     this.props.onFileDataUpdate(data);
+  },
+
+  onClickRemoveFile: function(fileId) {
+    this.props.onFileRemove(fileId);
+    this.setState({ modal: null });
+  },
+
+  onClickCloseModal: function() {
+    this.setState({ modal: null });
+  },
+
+  onClickRemoveTab: function(file) {
+    var footer = React.DOM.div(
+      { className: "col-md-6 col-md-offset-3" },
+      React.DOM.div(
+        {
+          className: "btn btn-default col-md-5",
+          onClick:   this.onClickCloseModal
+        },
+        "Nie"
+      ),
+      React.DOM.div(
+        {
+          className: "btn btn-danger col-md-5 col-md-offset-2",
+          onClick:   this.onClickRemoveFile.bind(null, file.id)
+        },
+        "Tak"
+      )
+    );
+
+    var modal = Modal({
+      title:        "Na pewno usunąć arkusz \"" + file.name + "\"?",
+      footer:       footer,
+      onClickClose: this.onClickCloseModal
+    });
+
+    this.setState({ modal: modal });
   },
 
   render: function() {
@@ -35,7 +78,23 @@ var RightView = CreateClass({
       React.DOM.div(
         { className: "content" },
         Tabs(
-          null,
+          {
+            titleGetter: function(tab) {
+              var closeButton = React.DOM.span(
+                {
+                  className: "btn btn-xs btn-default remove-tab-button",
+                  onClick:   this.onClickRemoveTab.bind(null, tab)
+                },
+                "✕"
+              );
+
+              return React.DOM.div(
+                null,
+                tab.name,
+                (tab.name !== "+") ? closeButton : null
+              );
+            }.bind(this)
+          },
           files
             .map(function(file, index) {
               return FileTable(extend({ key: index }, file));
@@ -47,9 +106,9 @@ var RightView = CreateClass({
                 onFileDataUpdate: this.onFileDataUpdate
               })
             ])
-            .reverse() // TODO: remove this, only for tests!
         )
-      )
+      ),
+      this.state.modal
     );
   }
 });
@@ -63,12 +122,17 @@ var DocumentEdit = CreateClass({
     this.props.onFileDataUpdate(data);
   },
 
+  onFileRemove: function(fileId) {
+    this.props.onFileRemove(fileId);
+  },
+
   render: function() {
     var viewData = {
       files:             this.props.data.files,
       layers:            this.props.data.layers,
-      onLayerDataUpdate: this.onLayerDataUpdate,
-      onFileDataUpdate:  this.onFileDataUpdate
+      onFileDataUpdate:  this.onFileDataUpdate,
+      onFileRemove:      this.onFileRemove,
+      onLayerDataUpdate: this.onLayerDataUpdate
     };
 
     return React.DOM.div(
@@ -126,11 +190,22 @@ var DocumentEditWrapper = React.createClass({
     this.props.api.updateDocument(document);
   },
 
+  onFileRemove: function(fileId) {
+    var document   = this.state.data;
+    document.files = document.files.filter(function(file) {
+      return file.id !== fileId;
+    });
+
+    this.setState({ data: document });
+    this.props.api.updateDocument(document);
+  },
+
   render: function() {
     return DocumentEdit({
       data:              this.state.data,
       getData:           this.getData,
       onFileDataUpdate:  this.onFileDataUpdate,
+      onFileRemove:      this.onFileRemove,
       onLayerDataUpdate: this.onLayerDataUpdate
     });
   }

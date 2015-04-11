@@ -22,8 +22,8 @@
   }
 
   .left {
-    left: 0;
-    right: 50%;
+    left:          0;
+    right:         50%;
     padding-right: 5px;
   }
 
@@ -44,12 +44,12 @@
   }
 
   li > div {
-    padding: 10px;
-    cursor: pointer;
+    padding:       10px;
+    cursor:        pointer;
 
-    margin-right: 2px;
-    line-height: @line-height-base;
-    border: 1px solid transparent;
+    margin-right:  2px;
+    line-height:   @line-height-base;
+    border:        1px solid transparent;
     border-radius: @border-radius-base @border-radius-base 0 0;
 
     &:hover {
@@ -58,12 +58,12 @@
   }
 
   li.active > div{
-    font-weight: bold;
-    color: @nav-tabs-active-link-hover-color;
-    background-color: @nav-tabs-active-link-hover-bg;
-    border: 1px solid @nav-tabs-active-link-hover-border-color;
+    font-weight:         bold;
+    color:               @nav-tabs-active-link-hover-color;
+    background-color:    @nav-tabs-active-link-hover-bg;
+    border:              1px solid @nav-tabs-active-link-hover-border-color;
     border-bottom-color: transparent;
-    cursor: default;
+    cursor:              default;
   }
 }
 
@@ -113,10 +113,10 @@
 
 .upload-form {
   max-width: 640px;
-  margin: 0 auto;
+  margin:    0 auto;
 
   .file-caption {
-    border-top-right-radius: 0;
+    border-top-right-radius:    0;
     border-bottom-right-radius: 0;
   }
 
@@ -130,19 +130,19 @@
   }
 
   .btn-file input[type=file] {
-    position: absolute;
-    top: 0;
-    right: 0;
-    min-width: 100%;
+    position:   absolute;
+    top:        0;
+    right:      0;
+    min-width:  100%;
     min-height: 100%;
-    font-size: 100px;
+    font-size:  100px;
     text-align: right;
-    filter: alpha(opacity=0);
-    opacity: 0;
-    outline: none;
+    filter:     alpha(opacity=0);
+    opacity:    0;
+    outline:    none;
     background: white;
-    cursor: inherit;
-    display: block;
+    cursor:     inherit;
+    display:    block;
   }
 
   .progress {
@@ -159,4 +159,8 @@
       text-align:  right;
     }
   }
+}
+
+.remove-tab-button {
+  margin-left: 10px;
 }

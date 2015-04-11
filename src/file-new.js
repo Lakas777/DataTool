@@ -56,7 +56,10 @@ var FileUpload = CreateClass({
   },
 
   onClickCancel: function() {
-    console.log("cancel");
+    this.setState(this.getInitialState(), function() {
+      // ugly input reset
+      React.findDOMNode(this.refs.fileInput).value = "";
+    }.bind(this));
   },
 
   renderUploadStep: function() {
@@ -76,7 +79,11 @@ var FileUpload = CreateClass({
             )
           },
           React.DOM.span(null, "Wybierz plik"),
-          React.DOM.input({ type: "file", onChange: this.onChangeFile })
+          React.DOM.input({
+            type:     "file",
+            ref:      "fileInput",
+            onChange: this.onChangeFile
+          })
         )
       )
     );
