@@ -173,7 +173,25 @@ var DocumentEditWrapper = React.createClass({
     var index    = indexOfProp(document.layers, "id", data.id);
 
     if (index >= 0) {
-      document.layers[index] = extend(document.layers[index], data);
+      // changing fileId in layer should resets this layer to default values
+      if (data.fileId !== undefined) {
+        document.layers[index] = {
+          id:     data.id,
+          fileId: data.fileId,
+          name:   document.layers[index].name,
+          geo:    {
+            column: null,
+            type:   null
+          },
+          vis:    {
+            column: null
+          }
+        };
+      }
+      else {
+        // otherwise just update the data in layer
+        document.layers[index] = extend(document.layers[index], data);
+      }
 
       this.setState({ data: document });
       this.props.api.updateDocument(document);

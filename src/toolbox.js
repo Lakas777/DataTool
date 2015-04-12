@@ -8,8 +8,8 @@ var Config                 = require("./config");
 var Tabs                   = React.createFactory(require("./tabs"));
 var Selection              = React.createFactory(require("./selection"));
 
-var CreateClass            = require("./addons/create-class");
 var getKey                 = require("./addons/get-key");
+var CreateClass            = require("./addons/create-class");
 var objectWithoutEmptyKeys = require("./addons/object-without-empty-keys");
 
 var ToolboxVisData = CreateClass({

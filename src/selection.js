@@ -20,13 +20,23 @@ var Selection = React.createClass({
   },
 
   componentWillReceiveProps: function(nextProps) {
-    if (nextProps.selected !== this.state.selected) {
-      this.setState({ selected: nextProps.selected });
+    var selected = nextProps.selected;
+
+    if (selected !== this.state.selected) {
+      var value = selected;
+
+      if (value === undefined || value === null) {
+        value = this.props.valueGetter(this.props.data[0]);
+      }
+
+      this.setState({ selected: value });
     }
   },
 
   componentDidMount: function() {
-    if (this.props.selected === undefined) {
+    var selected = this.state.selected;
+
+    if (selected === undefined || selected === null) {
       var value = this.props.valueGetter(this.props.data[0]);
       this.onChange({ target: { value: value } });
     }
