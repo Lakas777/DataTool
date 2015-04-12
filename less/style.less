@@ -2,6 +2,25 @@
 @import (less) "fixed-data-table/dist/fixed-data-table.css";
 
 @border-style: 1px solid #ddd;
+@fade-time:    500ms;
+
+.fade-enter {
+  .opacity(0);
+
+  &.fade-enter-active {
+    .opacity(1);
+    .transition(opacity @fade-time;);
+  }
+}
+
+.fade-leave {
+  .opacity(1);
+  .transition(opacity @fade-time;);
+
+  &.fade-leave-active {
+    .opacity(0);
+  }
+}
 
 .main.container {
   margin-top: 80px;

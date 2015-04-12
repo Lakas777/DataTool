@@ -101,6 +101,7 @@ var RightView = CreateClass({
             })
             .concat([
               FileNew({
+                key:              "new-file-tab-button",
                 name:             "+",
                 className:        "new-file-tab-button",
                 onFileDataUpdate: this.onFileDataUpdate
@@ -108,7 +109,10 @@ var RightView = CreateClass({
             ])
         )
       ),
-      this.state.modal
+      CSSTransitionGroup(
+        { transitionName: "fade" },
+        this.state.modal ? React.DOM.div({ key: "modal" }, this.state.modal) : null
+      )
     );
   }
 });
