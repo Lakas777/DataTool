@@ -1,3 +1,4 @@
+var MD5 = require("MD5");
 var d3  = require("d3");
 var dsv = d3.dsv(";");
 
@@ -28,6 +29,12 @@ var TestData = {
       { name: "file 2", id: "fid0002", data: [] },
       { name: "file 3", id: "fid0003", data: [] }
     ]
+  },
+
+  newDocument: {
+    name:   "new document",
+    layers: [],
+    files:  []
   }
 };
 
@@ -37,19 +44,34 @@ module.exports = {
   },
 
   getDocument: function(id, callback) {
-    dsv("data/sample-data-1.csv", function(error, data) {
-      console.log("API getDocument", id, error);
+    if (id === "did0001" || id === "did0002") {
+      dsv("data/sample-data-1.csv", function(error, data) {
+        console.log("API getDocument", id, error);
 
-      TestData.document.files.forEach(function(file) {
-        file.data = data;
+        TestData.document.files.forEach(function(file) {
+          file.data = data;
+        });
+
+        callback(TestData.document);
       });
-
-      callback(TestData.document);
-    });
+    }
+    else {
+      callback(TestData.newDocument);
+    }
   },
 
   updateDocument: function(document, callback) {
     console.log("API updateDocument", document);
     if (callback) { callback(); }
+  },
+
+  createDocument: function(document, callback) {
+    console.log("API createDocument", document);
+    if (callback) {
+      callback({
+        name: document,
+        id:   MD5((new Date()).getTime())
+      });
+    }
   }
 };

@@ -1,6 +1,5 @@
 var extend                 = require("extend");
 var React                  = require("react");
-var PureRenderMixin        = require("react/addons").addons.PureRenderMixin;
 var LinkedStateMixin       = require("react/addons").addons.LinkedStateMixin;
 var MD5                    = require("MD5");
 var classNames             = require("classnames");
@@ -15,7 +14,7 @@ var CreateClass            = require("./addons/create-class");
 var objectWithoutEmptyKeys = require("./addons/object-without-empty-keys");
 
 var ToolboxNewLayer = CreateClass({
-  mixins: [ PureRenderMixin, LinkedStateMixin ],
+  mixins: [ LinkedStateMixin ],
 
   getInitialState: function() {
     return { name: "" };
@@ -62,8 +61,6 @@ var ToolboxNewLayer = CreateClass({
 });
 
 var ToolboxVisData = CreateClass({
-  mixins: [ PureRenderMixin ],
-
   onChangeColumn: function(columnName) {
     this.props.onSelectionChange({ selectedColumnName: columnName });
   },
@@ -90,8 +87,6 @@ var ToolboxVisData = CreateClass({
 });
 
 var ToolboxGeoData = CreateClass({
-  mixins: [ PureRenderMixin ],
-
   onChangeColumn: function(columnName) {
     this.props.onSelectionChange({ selectedColumnName: columnName });
   },
@@ -131,8 +126,6 @@ var ToolboxGeoData = CreateClass({
 });
 
 var ToolboxFileChoose = CreateClass({
-  mixins: [ PureRenderMixin ],
-
   onChangeFile: function(fileId) {
     this.props.onSelectionChange({ selectedFileId: fileId });
   },

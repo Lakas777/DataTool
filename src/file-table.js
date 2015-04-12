@@ -1,7 +1,6 @@
 Object.assign       = require("object-assign");
 
 var React           = require("react");
-var PureRenderMixin = require("react/addons").addons.PureRenderMixin;
 var FixedDataTable  = require("fixed-data-table");
 var OnResize        = require("react-window-mixins").OnResize;
 
@@ -9,7 +8,7 @@ var Table           = React.createFactory(FixedDataTable.Table);
 var Column          = React.createFactory(FixedDataTable.Column);
 
 var FileTable = React.createClass({
-  mixins: [ OnResize, PureRenderMixin ],
+  mixins: [ OnResize ],
 
   render: function() {
     var data   = this.props.data || [];

@@ -1,6 +1,5 @@
 var extend                 = require("extend");
 var React                  = require("react");
-var PureRenderMixin        = require("react/addons").addons.PureRenderMixin;
 var indexOfProp            = require("./addons/index-of-prop");
 var CreateClass            = require("./addons/create-class");
 var CSSTransitionGroup     = require("./addons/css-transition-group");
@@ -23,8 +22,6 @@ var LeftView = CreateClass({
 });
 
 var RightView = CreateClass({
-  mixins: [ PureRenderMixin ],
-
   getInitialState: function() {
     return { modal: null };
   },

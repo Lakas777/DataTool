@@ -126,7 +126,8 @@ var FileUpload = CreateClass({
     return React.DOM.div(
       { className: "upload-new-file" },
       this.renderUploadStep(),
-      this.state.uploaded ? this.renderParseStep() : null
+      this.renderParseStep()
+      // this.state.uploaded ? this.renderParseStep() : null
     );
   }
 });

@@ -25,7 +25,7 @@ var Selection = React.createClass({
     if (selected !== this.state.selected) {
       var value = selected;
 
-      if (value === undefined || value === null) {
+      if (value === null) {
         value = this.props.valueGetter(this.props.data[0]);
       }
 
