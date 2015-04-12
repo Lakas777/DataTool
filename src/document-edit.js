@@ -1,6 +1,6 @@
 var extend                 = require("extend");
 var React                  = require("react");
-var PureRenderMixin        = require("react/addons").PureRenderMixin;
+var PureRenderMixin        = require("react/addons").addons.PureRenderMixin;
 var indexOfProp            = require("./addons/index-of-prop");
 var CreateClass            = require("./addons/create-class");
 var CSSTransitionGroup     = require("./addons/css-transition-group");
@@ -122,6 +122,10 @@ var DocumentEdit = CreateClass({
     this.props.onLayerDataUpdate(data);
   },
 
+  onLayerRemove: function(layerId) {
+    this.props.onLayerRemove(layerId);
+  },
+
   onFileDataUpdate: function(data) {
     this.props.onFileDataUpdate(data);
   },
@@ -134,9 +138,10 @@ var DocumentEdit = CreateClass({
     var viewData = {
       files:             this.props.data.files,
       layers:            this.props.data.layers,
+      onLayerDataUpdate: this.onLayerDataUpdate,
+      onLayerRemove:     this.onLayerRemove,
       onFileDataUpdate:  this.onFileDataUpdate,
-      onFileRemove:      this.onFileRemove,
-      onLayerDataUpdate: this.onLayerDataUpdate
+      onFileRemove:      this.onFileRemove
     };
 
     return React.DOM.div(
@@ -172,30 +177,53 @@ var DocumentEditWrapper = React.createClass({
     var document = this.state.data;
     var index    = indexOfProp(document.layers, "id", data.id);
 
+    var emptyDocument = {
+      id:       data.id,
+      fileId:   null,
+      name:     null,
+      geo:      {
+        column: null,
+        type:   null
+      },
+      vis:      {
+        column: null
+      }
+    };
+
+    // if there's layer with given id - update it
     if (index >= 0) {
       // changing fileId in layer should resets this layer to default values
       if (data.fileId !== undefined) {
-        document.layers[index] = {
-          id:     data.id,
+        document.layers[index] = extend(emptyDocument, {
           fileId: data.fileId,
-          name:   document.layers[index].name,
-          geo:    {
-            column: null,
-            type:   null
-          },
-          vis:    {
-            column: null
-          }
-        };
+          name:   document.layers[index].name
+        });
       }
       else {
         // otherwise just update the data in layer
         document.layers[index] = extend(document.layers[index], data);
       }
-
-      this.setState({ data: document });
-      this.props.api.updateDocument(document);
     }
+    // otherwise add new layer
+    else {
+      document.layers.push(extend(emptyDocument, data));
+    }
+
+    this.setState({ data: document });
+    this.props.api.updateDocument(document);
+  },
+
+  onLayerRemove: function(layerId) {
+    var document = this.state.data;
+
+    console.log("onlayerremove", document, layerId);
+
+    document.layers = document.layers.filter(function(layer) {
+      return layer.id !== layerId;
+    });
+
+    this.setState({ data: document });
+    this.props.api.updateDocument(document);
   },
 
   onFileDataUpdate: function(data) {
@@ -213,9 +241,14 @@ var DocumentEditWrapper = React.createClass({
   },
 
   onFileRemove: function(fileId) {
-    var document   = this.state.data;
+    var document = this.state.data;
+
     document.files = document.files.filter(function(file) {
       return file.id !== fileId;
+    });
+
+    document.layers = document.layers.filter(function(layer) {
+      return layer.fileId !== fileId;
     });
 
     this.setState({ data: document });
@@ -226,9 +259,10 @@ var DocumentEditWrapper = React.createClass({
     return DocumentEdit({
       data:              this.state.data,
       getData:           this.getData,
+      onLayerDataUpdate: this.onLayerDataUpdate,
+      onLayerRemove:     this.onLayerRemove,
       onFileDataUpdate:  this.onFileDataUpdate,
-      onFileRemove:      this.onFileRemove,
-      onLayerDataUpdate: this.onLayerDataUpdate
+      onFileRemove:      this.onFileRemove
     });
   }
 });

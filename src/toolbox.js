@@ -1,6 +1,8 @@
 var extend                 = require("extend");
 var React                  = require("react");
-var PureRenderMixin        = require("react/addons").PureRenderMixin;
+var PureRenderMixin        = require("react/addons").addons.PureRenderMixin;
+var LinkedStateMixin       = require("react/addons").addons.LinkedStateMixin;
+var MD5                    = require("MD5");
 var classNames             = require("classnames");
 
 var Config                 = require("./config");
@@ -11,6 +13,53 @@ var Selection              = React.createFactory(require("./selection"));
 var getKey                 = require("./addons/get-key");
 var CreateClass            = require("./addons/create-class");
 var objectWithoutEmptyKeys = require("./addons/object-without-empty-keys");
+
+var ToolboxNewLayer = CreateClass({
+  mixins: [ PureRenderMixin, LinkedStateMixin ],
+
+  getInitialState: function() {
+    return { name: "" };
+  },
+
+  onClickCancel: function() {
+    this.setState(this.getInitialState());
+  },
+
+  onClickSave: function() {
+    this.props.onLayerDataUpdate({
+      name: this.state.name,
+      id:   MD5((new Date()).getTime())
+    });
+  },
+
+  render: function() {
+    return React.DOM.div(
+      { className: "toolbox-new-layer" },
+      React.DOM.div(
+        { className: "form-group" },
+        React.DOM.div(
+          { className: "form-inline" },
+          React.DOM.label({ className: "col-md-2" }, "Nazwa:"),
+          React.DOM.input({ type: "text", className: "col-md-4 form-control", valueLink: this.linkState("name") }),
+          React.DOM.div(
+            {
+              className: "btn btn-default col-md-2 col-md-offset-1",
+              onClick: this.onClickCancel
+            },
+            "Anuluj"
+          ),
+          React.DOM.div(
+            {
+              className: "btn btn-success col-md-2 col-md-offset-1",
+              onClick: this.onClickSave
+            },
+            "Zapisz"
+          )
+        )
+      )
+    );
+  }
+});
 
 var ToolboxVisData = CreateClass({
   mixins: [ PureRenderMixin ],
@@ -206,6 +255,14 @@ var ToolboxWrapper = React.createClass({
     this.props.onLayerDataUpdate(data);
   },
 
+  onLayerDataUpdate: function(data) {
+    this.props.onLayerDataUpdate(data);
+  },
+
+  onClickRemoveLayer: function(layer) {
+    this.props.onLayerRemove(layer.layerId);
+  },
+
   render: function() {
     var columns = this.columnData(this.props.files || []);
     var layers  = this.props.layers || [];
@@ -213,21 +270,46 @@ var ToolboxWrapper = React.createClass({
     return React.DOM.div(
       { className: "toolbox" },
       Tabs(
-        null,
-        layers.map(function(tab, index) {
-          return ToolboxTab({
-            key:                index,
-            name:               tab.name,
-            layerId:            tab.id,
-            fileId:             tab.fileId,
-            geo:                tab.geo,
-            vis:                tab.vis,
-            columns:            columns,
-            onSelectionFile:    this.onSelectionFile,
-            onSelectionGeoData: this.onSelectionGeoData,
-            onSelectionVisData: this.onSelectionVisData
-          });
-        }.bind(this))
+        {
+          titleGetter: function(tab) {
+            var closeButton = React.DOM.span(
+              {
+                className: "btn btn-xs btn-default remove-tab-button",
+                onClick:   this.onClickRemoveLayer.bind(null, tab)
+              },
+              "✕"
+            );
+
+            return React.DOM.div(
+              null,
+              tab.name,
+              (tab.name !== "+") ? closeButton : null
+            );
+          }.bind(this)
+        },
+        layers
+          .map(function(tab, index) {
+            return ToolboxTab({
+              key:                index,
+              name:               tab.name,
+              layerId:            tab.id,
+              fileId:             tab.fileId,
+              geo:                tab.geo,
+              vis:                tab.vis,
+              columns:            columns,
+              onSelectionFile:    this.onSelectionFile,
+              onSelectionGeoData: this.onSelectionGeoData,
+              onSelectionVisData: this.onSelectionVisData
+            });
+          }.bind(this))
+          .concat([
+            ToolboxNewLayer({
+              key:               "new-layer-tab-button",
+              name:              "+",
+              className:         "new-layer-tab-button",
+              onLayerDataUpdate: this.onLayerDataUpdate
+            })
+          ])
       )
     );
   }

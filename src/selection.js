@@ -1,5 +1,5 @@
 var React           = require("react");
-var PureRenderMixin = require("react/addons").PureRenderMixin;
+var PureRenderMixin = require("react/addons").addons.PureRenderMixin;
 var classNames      = require("classnames");
 
 var Selection = React.createClass({

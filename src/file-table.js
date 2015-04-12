@@ -1,7 +1,7 @@
 Object.assign       = require("object-assign");
 
 var React           = require("react");
-var PureRenderMixin = require("react/addons").PureRenderMixin;
+var PureRenderMixin = require("react/addons").addons.PureRenderMixin;
 var FixedDataTable  = require("fixed-data-table");
 var OnResize        = require("react-window-mixins").OnResize;
 
