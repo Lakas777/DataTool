@@ -9,6 +9,7 @@
     "MD5": "^1.2.1",
     "bootstrap": "^3.3.4",
     "classnames": "^1.2.0",
+    "colorbrewer": "0.0.2",
     "d3": "^3.5.5",
     "extend": "^2.0.0",
     "fixed-data-table": "^0.1.2",
