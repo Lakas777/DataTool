@@ -36,15 +36,16 @@ var Visualization = React.createClass({
   renderVisualization: function() {
     console.log("render viz");
 
-    var svg               = d3.select(React.findDOMNode(this));
-    var width             = this.props.width;
-    var height            = this.props.height;
-    var scale             = Math.min(width, height) * 5;
-    var data              = this.props.data;
-    var columnGeo         = getKey(this.props, "geo.type");
-    var columnGeoIndex    = indexOfProp(Config.dataTypes, "key", columnGeo);
-    var columnGeoAccessor = getKey(Config.dataTypes[columnGeoIndex], "accessor");
-    var columnGeoTopojson = getKey(Config.dataTypes[columnGeoIndex], "topojson");
+    var svg                   = d3.select(React.findDOMNode(this));
+    var width                 = this.props.width;
+    var height                = this.props.height;
+    var scale                 = Math.min(width, height) * 5;
+    var data                  = this.props.data;
+    var columnGeo             = getKey(this.props, "geo.type");
+    var columnGeoIndex        = indexOfProp(Config.dataTypes, "key", columnGeo);
+    var columnGeoAccessor     = getKey(Config.dataTypes[columnGeoIndex], "accessor");
+    var columnGeoCodeAccessor = getKey(Config.dataTypes[columnGeoIndex], "codeAccessor");
+    var columnGeoTopojson     = getKey(Config.dataTypes[columnGeoIndex], "topojson");
 
     var projection = d3.geo.mercator()
       .center([ 20, 51.8 ])
@@ -55,14 +56,11 @@ var Visualization = React.createClass({
       .domain([ 0, 100 ]) // TODO domain should be set in toolbox (0-1, 0-100, min-max from data, user input)
       .range(colorbrewer.PuBu[7]); // TODO colors should be set in toolbox
 
-    // svg.selectAll("*").remove();
-
-    var path = d3.geo.path().projection(projection);
+    var path = d3.geo.path()
+      .projection(projection);
 
     if (getKey(this.props, "geo.type")) {
       this.getGeoJson(function(error, geojson) {
-        console.log(geojson);
-
         if (!error) {
           var geoData = topojson.feature(
             geojson,
@@ -71,22 +69,14 @@ var Visualization = React.createClass({
 
           var paths = svg.selectAll("path")
             .data(geoData, function(d) {
-              return getKey(d, columnGeoAccessor);
+              return getKey(d, columnGeoCodeAccessor);
             });
 
           paths
             .enter()
             .append("path")
-            .each(function(d) {
-              if (getKey(d, columnGeoAccessor) === "powiat Zamość") {
-                d.geometry.coordinates = [ d.geometry.coordinates[0] ];
-              }
-            })
             .attr("d", path)
-            .attr("data-name", function(d) {
-              return getKey(d, columnGeoAccessor);
-            })
-            .attr("fill", "white")
+            .attr("fill", "#666")
             .attr("stroke", "#ddd");
 
           paths
