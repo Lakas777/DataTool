@@ -191,20 +191,22 @@ var DocumentEditWrapper = React.createClass({
     if (index >= 0) {
       // changing fileId in layer should resets this layer to default values
       if (data.fileId !== undefined) {
-        document.layers[index] = extend(emptyDocument, {
+        document.layers[index] = extend(true, emptyDocument, {
           fileId: data.fileId,
           name:   document.layers[index].name
         });
       }
       else {
         // otherwise just update the data in layer
-        document.layers[index] = extend(document.layers[index], data);
+        document.layers[index] = extend(true, document.layers[index], data);
       }
     }
     // otherwise add new layer
     else {
-      document.layers.push(extend(emptyDocument, data));
+      document.layers.push(extend(true, emptyDocument, data));
     }
+
+    console.log("updated layer document", document);
 
     this.setState({ data: document });
     this.props.api.updateDocument(document);
@@ -212,8 +214,6 @@ var DocumentEditWrapper = React.createClass({
 
   onLayerRemove: function(layerId) {
     var document = this.state.data;
-
-    console.log("onlayerremove", document, layerId);
 
     document.layers = document.layers.filter(function(layer) {
       return layer.id !== layerId;

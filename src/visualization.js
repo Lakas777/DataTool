@@ -1,5 +1,6 @@
 var React       = require("react");
 var d3          = require("d3");
+var topojson    = require("topojson");
 var colorbrewer = require("colorbrewer");
 
 var Config      = require("./config");
@@ -10,7 +11,7 @@ var Visualization = React.createClass({
   getDefaultProps: function() {
     return {
       width:  640,
-      height: 420
+      height: 480
     };
   },
 
@@ -27,6 +28,8 @@ var Visualization = React.createClass({
     var index = indexOfProp(Config.dataTypes, "key", type);
     var url   = Config.dataTypes[index].url;
 
+    console.log("getting geojson", url);
+
     d3.json(url, callback);
   },
 
@@ -41,7 +44,7 @@ var Visualization = React.createClass({
     var columnGeo         = getKey(this.props, "geo.type");
     var columnGeoIndex    = indexOfProp(Config.dataTypes, "key", columnGeo);
     var columnGeoAccessor = getKey(Config.dataTypes[columnGeoIndex], "accessor");
-
+    var columnGeoTopojson = getKey(Config.dataTypes[columnGeoIndex], "topojson");
 
     var projection = d3.geo.mercator()
       .center([ 20, 51.8 ])
@@ -49,32 +52,62 @@ var Visualization = React.createClass({
       .translate([ width / 2, height / 2 ]);
 
     var colorScale = d3.scale.quantize()
-      .domain([ 0, 100 ])
-      .range(colorbrewer.PuBu[7]);
+      .domain([ 0, 100 ]) // TODO domain should be set in toolbox (0-1, 0-100, min-max from data, user input)
+      .range(colorbrewer.PuBu[7]); // TODO colors should be set in toolbox
 
-    svg.selectAll("*").remove();
+    // svg.selectAll("*").remove();
+
+    var path = d3.geo.path().projection(projection);
 
     if (getKey(this.props, "geo.type")) {
       this.getGeoJson(function(error, geojson) {
+        console.log(geojson);
 
         if (!error) {
-          svg.selectAll("path")
-            .data(geojson)
+          var geoData = topojson.feature(
+            geojson,
+            getKey(geojson, columnGeoTopojson)
+          ).features;
+
+          var paths = svg.selectAll("path")
+            .data(geoData, function(d) {
+              return getKey(d, columnGeoAccessor);
+            });
+
+          paths
             .enter()
             .append("path")
-            .attr("d", d3.geo.path().projection(projection))
-            .attr("stroke", "#ddd")
+            .each(function(d) {
+              if (getKey(d, columnGeoAccessor) === "powiat Zamość") {
+                d.geometry.coordinates = [ d.geometry.coordinates[0] ];
+              }
+            })
+            .attr("d", path)
+            .attr("data-name", function(d) {
+              return getKey(d, columnGeoAccessor);
+            })
+            .attr("fill", "white")
+            .attr("stroke", "#ddd");
+
+          paths
+            .transition()
+            .duration(500)
             .attr("fill", function(d) {
+              var color = "#ddd";
               var key   = getKey(d, columnGeoAccessor);
               var index = indexOfProp(data, "geo", key, { fuzzy: true })[0];
-              var color = "#ddd";
-
-              console.log(d, key, index);
 
               if (index >= 0) { color = colorScale(data[index].value); }
 
               return color;
             });
+
+          paths
+            .exit()
+            .transition()
+            .duration(500)
+            .attr("opacity", 0)
+            .remove();
         }
       });
     }

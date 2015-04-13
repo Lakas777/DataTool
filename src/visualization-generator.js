@@ -47,7 +47,7 @@ var VisualizationGenerator = React.createClass({
           memo[index].count += 1;
         }
         else {
-          memo.push({
+         memo.push({
             value: value,
             count: 1,
             geo:   d[columnGeo]

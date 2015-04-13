@@ -2,15 +2,31 @@ module.exports = function(array, key, prop, options) {
   var fuzzy = options && options.fuzzy === true;
   var index = -1;
 
-  if (fuzzy) {
-    var expression = new RegExp(prop);
+  var expressionPropMap = {};
+  var expressionKeyMap  = {};
 
+  var createRegExp = function(previous, string) {
+    var regexp;
+
+    if (previous[string]) {
+      regexp = previous[string];
+    }
+    else {
+      regexp = new RegExp(string, "i");
+      previous[string] = regexp;
+    }
+
+    return regexp;
+  };
+
+  if (fuzzy) {
     index = array
       .map(function(o, i) {
-        console.log("o[key]", o, key, o[key]);
+        var expressionProp = createRegExp(expressionPropMap, prop);
+        var expressionKey  = createRegExp(expressionKeyMap, o[key]);
 
         return {
-          match: o[key] ? o[key].match(expression) : null,
+          match: o[key] ? (o[key].match(expressionProp) || prop.match(expressionKey)) : null,
           index: i
         };
       })
