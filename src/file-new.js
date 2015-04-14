@@ -140,7 +140,7 @@ var FileNew = React.createClass({
   },
 
   render: function() {
-    var height = this.state.window.height - 133;
+    var height = this.state.window.height - 135;
 
     return React.DOM.div(
       { style: { height: height } },

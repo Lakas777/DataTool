@@ -31,7 +31,7 @@ var VisualizationGenerator = React.createClass({
   },
 
   getData: function() {
-    var data = this.getFile().data;
+    var data      = getKey(this.getFile(), "data") || [];
     var columnGeo = this.props.layers[0].geo.column;
     var columnVis = this.props.layers[0].vis.column;
 
@@ -76,7 +76,7 @@ var VisualizationGenerator = React.createClass({
       height = this.state.window.height / 2 - 30;
     }
 
-    if (this.props.files && this.props.layers) {
+    if (this.props.files && this.props.layers && this.props.layers.length > 0) {
       data = this.getData();
     }
 
