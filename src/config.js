@@ -1,5 +1,6 @@
 module.exports = {
-  dataTypes: [
+  delimiters: [ ",", ";", ":", "|", "<tab>" ],
+  dataTypes:  [
     {
       name:         "województwa",
       key:          "province",

@@ -6,6 +6,7 @@ var MD5         = require("MD5");
 var classNames  = require("classnames");
 var d3          = require("d3");
 
+var Config      = require("./config");
 var CreateClass = require("./addons/create-class");
 var Selection   = React.createFactory(require("./selection"));
 
@@ -20,13 +21,37 @@ var FileUpload = CreateClass({
   },
 
   onChangeFile: function(event) {
+    var detectDelimiter = function(line) {
+      var counts = Config.delimiters.map(function(delimiter) {
+        var count = line
+          .split("")
+          .filter(function(character) { return character === delimiter; })
+          .length;
+
+        return {
+          delimiter: delimiter,
+          count:     count
+        };
+      });
+
+      var delimiter = counts.sort(function(a, b) {
+        return b.count - a.count;
+      })[0].delimiter;
+
+      return delimiter;
+    };
+
     var file       = event.target.files[0];
     var fileReader = new FileReader();
 
     this.setState({ fileName: file.name, uploaded: false });
 
     fileReader.onload = function() {
+      var firstLine         = fileReader.result.split("\n")[0];
+      var detectedDelimiter = detectDelimiter(firstLine);
+
       this.setState({
+        delimiter:   detectedDelimiter,
         uploaded:    true,
         fileContent: fileReader.result
       });
@@ -98,7 +123,8 @@ var FileUpload = CreateClass({
           name:           "Delimiter:",
           className:      "form-inline",
           labelClassName: "col-md-3",
-          data:           [ ",", ";", ":", "|", "<tab>" ],
+          selected:       this.state.delimiter,
+          data:           Config.delimiters,
           onChange:       this.onChangeDelimiter
         })
       ),
