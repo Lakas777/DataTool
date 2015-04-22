@@ -1,6 +1,17 @@
 module.exports = {
-  delimiters: [ ",", ";", ":", "|", "<tab>" ],
-  dataTypes:  [
+  delimiters:   [ ",", ";", ":", "|", "<tab>" ],
+  mappingTypes: [
+    { name: "średnia",  key: "avg" },
+    { name: "maksimum", key: "max" },
+    { name: "minimum",  key: "min" },
+    { name: "suma",     key: "sum" }
+  ],
+  rangeTypes:   [
+    { name: "0.0 - 1.0", key: "normalized" },
+    { name: "0% - 100%", key: "percentage" },
+    { name: "min - max", key: "minmax"     }
+  ],
+  dataTypes:    [
     {
       name:         "województwa",
       key:          "province",
@@ -24,12 +35,13 @@ module.exports = {
       codeAccessor: "properties.jpt_kod_je",
       topojson:     "objects.municipalities",
       url:          "data/municipalities.geojson"
-    },
-    {
-      name:         "miasta",
-      key:          "cities",
-      accessor:     "",
-      url:          "data/cities.json"
     }
+    // TODO: leave cities for later
+    // {
+    //   name:         "miasta",
+    //   key:          "cities",
+    //   accessor:     "",
+    //   url:          "data/cities.json"
+    // }
   ]
 };

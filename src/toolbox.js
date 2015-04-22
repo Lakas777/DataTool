@@ -5,12 +5,12 @@ var MD5                    = require("MD5");
 var classNames             = require("classnames");
 
 var Config                 = require("./config");
+var CreateClass            = require("./addons/create-class");
 
 var Tabs                   = React.createFactory(require("./tabs"));
 var Selection              = React.createFactory(require("./selection"));
 
-var getIn                 = require("./addons/get-in");
-var CreateClass            = require("./addons/create-class");
+var getIn                  = require("./addons/get-in");
 var objectWithoutEmptyKeys = require("./addons/object-without-empty-keys");
 
 var ToolboxNewLayer = CreateClass({
@@ -65,7 +65,17 @@ var ToolboxVisData = CreateClass({
     this.props.onSelectionChange({ selectedColumnName: columnName });
   },
 
+  onChangeMappingType: function(mappingKey) {
+    this.props.onSelectionChange({ selectedMappingKey: mappingKey });
+  },
+
+  onChangeRangeType: function(rangeKey) {
+    this.props.onSelectionChange({ selectedRangeKey: rangeKey });
+  },
+
   render: function() {
+    console.log("toolboxvizdata", this.props);
+
     return React.DOM.div(
       { className: "panel panel-default " },
       React.DOM.div(
@@ -75,11 +85,29 @@ var ToolboxVisData = CreateClass({
       React.DOM.div(
         { className: "panel-body" },
         Selection({
-          name:          "Kolumna:",
-          className:     "col-sm-6",
-          selected:      this.props.selected,
-          onChange:      this.onChangeColumn,
-          data:          this.props.columns
+          name:        "Kolumna:",
+          className:   "col-sm-6",
+          selected:    this.props.selectedColumn,
+          onChange:    this.onChangeColumn,
+          data:        this.props.columns
+        }),
+        Selection({
+          name:        "Typ",
+          className:   "col-sm-6",
+          selected:    this.props.selectedMappingType,
+          onChange:    this.onChangeMappingType,
+          nameGetter:  function(d) { return d.name; },
+          valueGetter: function(d) { return d.key; },
+          data:        Config.mappingTypes
+        }),
+        Selection({
+          name:        "Zakres",
+          className:   "col-sm-6",
+          selected:    this.props.selectedRangeType,
+          onChange:    this.onChangeRangeType,
+          nameGetter:  function(d) { return d.name; },
+          valueGetter: function(d) { return d.key; },
+          data:        Config.rangeTypes
         })
       )
     );
@@ -172,7 +200,9 @@ var ToolboxTab = CreateClass({
     this.props.onSelectionVisData({
       id:  this.props.layerId,
       vis: objectWithoutEmptyKeys({
-        column: event.selectedColumnName
+        column:      event.selectedColumnName,
+        mappingType: event.selectedMappingKey,
+        rangeType:   event.selectedRangeKey
       })
     });
   },
@@ -200,23 +230,25 @@ var ToolboxTab = CreateClass({
     return React.DOM.div(
       { className: "toolbox-tab" },
       showNode(showFilePanel, ToolboxFileChoose({
-        files:             files,
-        selected:          this.props.fileId,
-        onSelectionChange: this.onSelectionChangeFile
+        files:                 files,
+        selected:              this.props.fileId,
+        onSelectionChange:     this.onSelectionChangeFile
       })),
       showNode(showDataPanels, [
         ToolboxGeoData({
-          key:               "geodata",
-          columns:           dataPanelColumns,
-          selectedColumn:    this.props.geo.column,
-          selectedType:      this.props.geo.type,
-          onSelectionChange: this.onSelectionChangeGeoData
+          key:                 "geodata",
+          columns:             dataPanelColumns,
+          selectedColumn:      this.props.geo.column,
+          selectedType:        this.props.geo.type,
+          onSelectionChange:   this.onSelectionChangeGeoData
         }),
         ToolboxVisData({
-          key:               "visdata",
-          columns:           dataPanelColumns,
-          selected:          this.props.vis.column,
-          onSelectionChange: this.onSelectionChangeVisData
+          key:                 "visdata",
+          columns:             dataPanelColumns,
+          selectedColumn:      this.props.vis.column,
+          selectedMappingType: this.props.vis.mappingType,
+          selectedRangeType:   this.props.vis.rangeType,
+          onSelectionChange:   this.onSelectionChangeVisData
         })
       ])
     );

@@ -7,7 +7,8 @@ var classNames  = require("classnames");
 
 var Config      = require("./config");
 var CreateClass = require("./addons/create-class");
-var getIn      = require("./addons/get-in");
+
+var getIn       = require("./addons/get-in");
 var indexOfProp = require("./addons/index-of-prop");
 
 var stringToNumber = function(string) {
@@ -80,24 +81,37 @@ var Visualization = CreateClass({
   },
 
   getData: function() {
-    var data      = getIn(this.getFile(), "data");
-    var columnGeo = getIn(this.props.layer, "geo.column");
-    var columnVis = getIn(this.props.layer, "vis.column");
+    var data        = getIn(this.getFile(), "data", false);
+    var columnGeo   = getIn(this.props.layer, "geo.column", false);
+    var columnVis   = getIn(this.props.layer, "vis.column", false);
+    var mappingType = getIn(this.props.layer, "vis.mappingType", false);
 
-    if (!data || !columnGeo || !columnVis) { return []; }
+    var canCalculate = [
+      data,
+      columnGeo,
+      columnVis,
+      mappingType
+    ].every(function(status) { return status; });
+
+    if (!canCalculate) { return []; }
 
     data = data
       .reduce(function(memo, d) {
         var index = indexOfProp(memo, "geo", d[columnGeo]);
         var value = stringToNumber(d[columnVis]);
 
+        // TODO: switch to updateIn
         if (index >= 0) {
-          memo[index].value += value;
+          memo[index].sum   += value;
+          memo[index].min    = Math.min(memo[index].min, value);
+          memo[index].max    = Math.max(memo[index].max, value);
           memo[index].count += 1;
         }
         else {
          memo.push({
-            value: value,
+            sum:   value,
+            min:   value,
+            max:   value,
             count: 1,
             geo:   d[columnGeo]
           });
@@ -106,8 +120,15 @@ var Visualization = CreateClass({
         return memo;
       }, [])
       .map(function(d) {
+        var calculate = {
+          avg: function(d) { return d.sum / d.count; },
+          max: function(d) { return d.max; },
+          min: function(d) { return d.min; },
+          sum: function(d) { return d.sum; }
+        };
+
         return {
-          value: d.value / d.count,
+          value: calculate[mappingType](d),
           geo:   d.geo
         };
       });
@@ -139,14 +160,28 @@ var Visualization = CreateClass({
     var columnGeoAccessor     = getIn(Config.dataTypes, [ columnGeoIndex, "accessor" ]);
     var columnGeoCodeAccessor = getIn(Config.dataTypes, [ columnGeoIndex, "codeAccessor" ]);
     var columnGeoTopojson     = getIn(Config.dataTypes, [ columnGeoIndex, "topojson" ]);
+    var columnVisRangeType    = getIn(this.props.layer, "vis.rangeType");
 
     var projection = d3.geo.mercator()
       .center([ 20, 51.8 ])
       .scale(scale)
       .translate([ width / 2, height / 2 ]);
 
+    var calculateDomain = {
+      normalized: function()  { return [ 0, 1 ]; },
+      percentage: function()  { return [ 0, 100 ]; },
+      minmax:     function(d) {
+        return [
+          d3.min(d, function(d) { return d.value; }),
+          d3.max(d, function(d) { return d.value; })
+        ];
+      }
+    };
+
+    var domain = calculateDomain[columnVisRangeType](data);
+
     var colorScale = d3.scale.quantize()
-      .domain([ 0, 100 ])          // TODO domain should be set in toolbox (0-1, 0-100, min-max from data, user input)
+      .domain(domain)
       .range(colorbrewer.PuBu[7]); // TODO colors should be set in toolbox
 
     var path = d3.geo.path()
@@ -225,7 +260,7 @@ var VisualizationWrapper = React.createClass({
     var renderVisualization = [
       this.props.layers,
       this.props.files
-    ].every(function(data) { return getIn(data, 0) !== undefined; });
+    ].every(function(data) { return getIn(data, 0, false); });
 
     return React.DOM.div(
       { className: "visualization-wrapper" },
