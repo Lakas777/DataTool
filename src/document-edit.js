@@ -1,21 +1,21 @@
-var extend                 = require("extend");
-var React                  = require("react");
-var indexOfProp            = require("./addons/index-of-prop");
-var CreateClass            = require("./addons/create-class");
-var CSSTransitionGroup     = require("./addons/css-transition-group");
+var extend             = require("extend");
+var React              = require("react");
+var indexOfProp        = require("./addons/index-of-prop");
+var CreateClass        = require("./addons/create-class");
+var CSSTransitionGroup = require("./addons/css-transition-group");
 
-var FileNew                = React.createFactory(require("./file-new"));
-var FileTable              = React.createFactory(require("./file-table"));
-var Modal                  = React.createFactory(require("./modal"));
-var Tabs                   = React.createFactory(require("./tabs"));
-var Toolbox                = React.createFactory(require("./toolbox"));
-var VisualizationGenerator = React.createFactory(require("./visualization-generator"));
+var FileNew            = React.createFactory(require("./file-new"));
+var FileTable          = React.createFactory(require("./file-table"));
+var Modal              = React.createFactory(require("./modal"));
+var Tabs               = React.createFactory(require("./tabs"));
+var Toolbox            = React.createFactory(require("./toolbox"));
+var Visualization      = React.createFactory(require("./visualization"));
 
 var LeftView = CreateClass({
   render: function() {
     return React.DOM.div(
       { className: "left" },
-      VisualizationGenerator(this.props),
+      Visualization(this.props),
       Toolbox(this.props)
     );
   }
@@ -205,8 +205,6 @@ var DocumentEditWrapper = React.createClass({
     else {
       document.layers.push(extend(true, emptyDocument, data));
     }
-
-    console.log("updated layer document", document);
 
     this.setState({ data: document });
     this.props.api.updateDocument(document);

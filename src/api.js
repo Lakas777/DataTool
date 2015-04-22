@@ -13,14 +13,26 @@ var TestData = {
     layers: [
       {
         id:       "lid0001",
-        name:     "layer 1",
+        name:     "Kaczyński",
         fileId:   "fid0002",
         geo:      {
           column: "Województwo",
           type:   "province"
         },
         vis:      {
-          column: "% głosów ważnych"
+          column: "KACZYŃSKI Jarosław Aleksander"
+        }
+      },
+      {
+        id:       "lid0002",
+        name:     "Komorowski",
+        fileId:   "fid0001",
+        geo:      {
+          column: "Województwo",
+          type:   "province"
+        },
+        vis:      {
+          column: "KOMOROWSKI Bronisław Maria"
         }
       }
     ],

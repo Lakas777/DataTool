@@ -1,12 +1,13 @@
-module.exports = function(object, key) {
+module.exports = function(object, key, notFound) {
   var keys;
 
-  if (key instanceof Array)       { keys = key; }
+  if (key === undefined)          { keys = []; }
+  else if (key instanceof Array)  { keys = key; }
   else if (!isNaN(key))           { keys = [ key ]; }
   else if (key.indexOf(".") >= 0) { keys = key.split("."); }
   else                            { keys = [ key ]; }
 
   return keys.reduce(function(memo, key) {
-    return memo && memo[key] ? memo[key] : undefined;
+    return memo && memo[key] ? memo[key] : notFound;
   }, object);
 };
