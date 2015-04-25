@@ -7,6 +7,10 @@ var classNames             = require("classnames");
 var Config                 = require("./config");
 var CreateClass            = require("./addons/create-class");
 
+var Reflux                 = require("reflux");
+var DocumentStore          = require("./store").DocumentStore;
+var DocumentStoreActions   = require("./store").DocumentStoreActions;
+
 var Tabs                   = React.createFactory(require("./tabs"));
 var Selection              = React.createFactory(require("./selection"));
 
@@ -256,6 +260,8 @@ var ToolboxTab = CreateClass({
 });
 
 var ToolboxWrapper = React.createClass({
+  mixins: [ Reflux.connect(DocumentStore, "data") ],
+
   columnData: function(files) {
     return files.reduce(function(memo, file) {
       return memo.concat([{
@@ -285,12 +291,15 @@ var ToolboxWrapper = React.createClass({
   },
 
   onClickRemoveLayer: function(layer) {
+    DocumentStoreActions.layerRemove(layer.layerId);
     this.props.onLayerRemove(layer.layerId);
   },
 
   render: function() {
     var columns = this.columnData(this.props.files || []);
     var layers  = this.props.layers || [];
+
+    console.log("TOOLBOOX WRAPPER", this.state);
 
     return React.DOM.div(
       { className: "toolbox" },

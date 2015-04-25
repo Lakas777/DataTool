@@ -10,6 +10,7 @@ var TestData = {
 
   document: {
     name:  "test document",
+    id:    "did0001",
     layers: [
       {
         id:       "lid0001",
@@ -49,6 +50,7 @@ var TestData = {
 
   newDocument: {
     name:   "new document",
+    id:     "newdid0001",
     layers: [],
     files:  []
   }

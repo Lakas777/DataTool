@@ -1,10 +1,14 @@
-var React              = require("react");
-var LinkedStateMixin   = require("react/addons").addons.LinkedStateMixin;
+var React                 = require("react");
+var LinkedStateMixin      = require("react/addons").addons.LinkedStateMixin;
 
-var CreateClass        = require("./addons/create-class");
-var CSSTransitionGroup = require("./addons/css-transition-group");
+var CreateClass           = require("./addons/create-class");
+var CSSTransitionGroup    = require("./addons/css-transition-group");
 
-var Modal              = React.createFactory(require("./modal"));
+var Reflux                = require("reflux");
+var DocumentsStoreActions = require("./store").DocumentsStoreActions;
+var DocumentsStore        = require("./store").DocumentsStore;
+
+var Modal                 = React.createFactory(require("./modal"));
 
 var DocumentRow = CreateClass({
   onClickRow: function() {
@@ -36,7 +40,10 @@ var DocumentNewModal = CreateClass({
   },
 
   onClickAdd: function() {
-    this.props.onClickAdd({ name: this.state.name });
+    var document = { name: this.state.name };
+
+    DocumentsStoreActions.create(document);
+    this.props.onClickAdd(document);
   },
 
   render: function() {
@@ -76,7 +83,13 @@ var DocumentNewModal = CreateClass({
   }
 });
 
-var DocumentList = CreateClass({
+var DocumentList = React.createClass({
+  mixins: [ Reflux.connect(DocumentsStore, "data") ],
+
+  componentDidMount: function() {
+    DocumentsStoreActions.load();
+  },
+
   contextTypes: {
     router: React.PropTypes.func.isRequired
   },
@@ -93,10 +106,8 @@ var DocumentList = CreateClass({
     this.setState({ modal: null });
   },
 
-  onClickAddDocument: function(document) {
-    this.props.createDocument(document, function(document) {
-      this.context.router.transitionTo("document", { id: document.id });
-    }.bind(this));
+  onClickAddDocument: function() {
+    this.setState({ modal: null });
   },
 
   onClickNew: function() {
@@ -109,8 +120,6 @@ var DocumentList = CreateClass({
   },
 
   render: function() {
-    var data = this.props.data;
-
     return React.DOM.div(
       { className: "document-list" },
       React.DOM.table(
@@ -126,7 +135,7 @@ var DocumentList = CreateClass({
         ),
         React.DOM.tbody(
           null,
-          data.map(function(document, index) {
+          this.state.data.map(function(document, index) {
             return DocumentRow({ key: index, document: document, onClickRow: this.onClickRow });
           }.bind(this))
         )
@@ -143,32 +152,4 @@ var DocumentList = CreateClass({
   }
 });
 
-var DocumentListWrapper = React.createClass({
-  getInitialState: function() {
-    return { data: [] };
-  },
-
-  componentDidMount: function() {
-    this.getData();
-  },
-
-  getData: function() {
-    this.props.api.getDocuments(function(data) {
-      this.setState({ data: data });
-    }.bind(this));
-  },
-
-  createDocument: function(document, callback) {
-    this.props.api.createDocument(document, callback);
-  },
-
-  render: function() {
-    return DocumentList({
-      data:           this.state.data,
-      getData:        this.getData,
-      createDocument: this.createDocument
-    });
-  }
-});
-
-module.exports = DocumentListWrapper;
+module.exports = DocumentList;
