@@ -123,7 +123,7 @@ var FileNew = React.createClass({
       React.DOM.div(
         { className: "delimiter-select col-md-6 col-md-offset-4" },
         Selection({
-          name:           "Delimiter:",
+          name:           "Delimiter",
           className:      "form-inline",
           labelClassName: "col-md-3",
           selected:       this.state.delimiter,

@@ -51,7 +51,7 @@ var DocumentNewModal = CreateClass({
       { className: "form-inline new-document-form-group" },
       React.DOM.div(
         { className: "form-group col-md-12" },
-        React.DOM.label({ className: "col-md-2" }, "Nazwa:"),
+        React.DOM.label({ className: "col-md-2" }, "Nazwa"),
         React.DOM.input({ type: "text", className: "col-md-4 form-control", valueLink: this.linkState("name") })
       )
     );

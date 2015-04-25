@@ -14,7 +14,7 @@ var Reflux               = require("reflux");
 var DocumentStore        = require("./store").DocumentStore;
 var DocumentStoreActions = require("./store").DocumentStoreActions;
 
-var getIn                = require("./addons/get-in");
+var getIn                = require("./lib/insides").getIn;
 var indexOfProp          = require("./addons/index-of-prop");
 
 var stringToNumber = function(string) {

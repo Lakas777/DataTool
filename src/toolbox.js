@@ -14,7 +14,8 @@ var DocumentStoreActions   = require("./store").DocumentStoreActions;
 var Tabs                   = React.createFactory(require("./tabs"));
 var Selection              = React.createFactory(require("./selection"));
 
-var getIn                  = require("./addons/get-in");
+var getIn                  = require("./lib/insides").getIn;
+var buildObject            = require("./lib/insides").buildObject;
 var objectWithoutEmptyKeys = require("./addons/object-without-empty-keys");
 
 var layerFromId = function(data, layerId) {
@@ -52,7 +53,7 @@ var ToolboxNewLayer = CreateClass({
         { className: "form-group" },
         React.DOM.div(
           { className: "form-inline" },
-          React.DOM.label({ className: "col-md-2" }, "Nazwa:"),
+          React.DOM.label({ className: "col-md-2" }, "Nazwa"),
           React.DOM.input({ type: "text", className: "col-md-4 form-control", valueLink: this.linkState("name") }),
           React.DOM.div(
             {
@@ -89,39 +90,13 @@ var ToolboxVisData = CreateClass({
     })
   ],
 
-  onChangeColumn: function(column) {
-    DocumentStoreActions.layerUpdate({
-      id:  this.props.layerId,
-      vis: { column: column }
-    });
-  },
+  layerUpdate: function(path, value) {
+    var updateObject = buildObject([
+      [ "id", this.props.layerId ],
+      [ [ "vis", path ], value ]
+    ]);
 
-  onChangeMappingType: function(mappingType) {
-    DocumentStoreActions.layerUpdate({
-      id:  this.props.layerId,
-      vis: { mappingType: mappingType }
-    });
-  },
-
-  onChangeRangeType: function(rangeType) {
-    DocumentStoreActions.layerUpdate({
-      id:  this.props.layerId,
-      vis: { rangeType: rangeType }
-    });
-  },
-
-  onChangeColorNum: function(colorNum) {
-    DocumentStoreActions.layerUpdate({
-      id:  this.props.layerId,
-      vis: { colorNum: colorNum }
-    });
-  },
-
-  onChangeColorPalette: function(colorPalette) {
-    DocumentStoreActions.layerUpdate({
-      id:  this.props.layerId,
-      vis: { colorPalette: colorPalette }
-    });
+    DocumentStoreActions.layerUpdate(updateObject);
   },
 
   render: function() {
@@ -134,17 +109,17 @@ var ToolboxVisData = CreateClass({
       React.DOM.div(
         { className: "panel-body" },
         Selection({
-          name:        "Kolumna:",
+          name:        "Kolumna",
           className:   "col-sm-6",
           selected:    getIn(this.state, [ "layer", "vis", "column" ]),
-          onChange:    this.onChangeColumn,
+          onChange:    this.layerUpdate.bind(null, "column"),
           data:        this.state.columns
         }),
         Selection({
           name:        "Typ",
           className:   "col-sm-6",
           selected:    getIn(this.state, [ "layer", "vis", "mappingType" ]),
-          onChange:    this.onChangeMappingType,
+          onChange:    this.layerUpdate.bind(null, "mappingType"),
           nameGetter:  function(d) { return d.name; },
           valueGetter: function(d) { return d.key; },
           data:        Config.mappingTypes
@@ -153,7 +128,7 @@ var ToolboxVisData = CreateClass({
           name:        "Zakres",
           className:   "col-sm-6",
           selected:    getIn(this.state, [ "layer", "vis", "rangeType" ]),
-          onChange:    this.onChangeRangeType,
+          onChange:    this.layerUpdate.bind(null, "rangeType"),
           nameGetter:  function(d) { return d.name; },
           valueGetter: function(d) { return d.key; },
           data:        Config.rangeTypes
@@ -162,14 +137,14 @@ var ToolboxVisData = CreateClass({
           name:        "Kolory",
           className:   "col-sm-3",
           selected:    getIn(this.state, [ "layer", "vis", "colorNum" ]),
-          onChange:    this.onChangeColorNum,
+          onChange:    this.layerUpdate.bind(null, "colorNum"),
           data:        Config.colors.nums
         }),
         Selection({
           name:        "Paleta",
           className:   "col-sm-3",
           selected:    getIn(this.state, [ "layer", "vis", "colorPalette" ]),
-          onChange:    this.onChangeColorPalette,
+          onChange:    this.layerUpdate.bind(null, "colorPalette"),
           data:        Config.colors.palettes
         })
       )
@@ -192,18 +167,13 @@ var ToolboxGeoData = CreateClass({
     })
   ],
 
-  onChangeColumn: function(column) {
-    DocumentStoreActions.layerUpdate({
-      id:  this.props.layerId,
-      geo: { column: column }
-    });
-  },
+  layerUpdate: function(path, value) {
+    var updateObject = buildObject([
+      [ "id", this.props.layerId ],
+      [ [ "geo", path ], value ]
+    ]);
 
-  onChangeType: function(type) {
-    DocumentStoreActions.layerUpdate({
-      id:  this.props.layerId,
-      geo: { type: type }
-    });
+    DocumentStoreActions.layerUpdate(updateObject);
   },
 
   render: function() {
@@ -216,17 +186,17 @@ var ToolboxGeoData = CreateClass({
       React.DOM.div(
         { className: "panel-body" },
         Selection({
-          name:        "Kolumna:",
+          name:        "Kolumna",
           className:   "col-sm-6",
           selected:    getIn(this.state, [ "layer", "geo", "column" ]),
-          onChange:    this.onChangeColumn,
+          onChange:    this.layerUpdate.bind(null, "column"),
           data:        this.state.columns
         }),
         Selection({
-          name:        "Typ:",
+          name:        "Typ",
           className:   "col-sm-6",
           selected:    getIn(this.state, [ "layer", "geo", "type" ]),
-          onChange:    this.onChangeType,
+          onChange:    this.layerUpdate.bind(null, "type"),
           nameGetter:  function(d) { return d.name; },
           valueGetter: function(d) { return d.key; },
           data:        Config.dataTypes
@@ -260,7 +230,7 @@ var ToolboxFileChoose = CreateClass({
       React.DOM.div(
         { className: "panel-body form-inline" },
         Selection({
-          name:           "Arkusz:",
+          name:           "Arkusz",
           className:      "col-sm-9",
           labelClassName: "col-sm-2",
           onChange:       this.onChangeFile,

@@ -3,7 +3,7 @@ var React                = require("react");
 var CreateClass          = require("./addons/create-class");
 var CSSTransitionGroup   = require("./addons/css-transition-group");
 
-var getIn                = require("./addons/get-in");
+var getIn                = require("./lib/insides").getIn;
 var indexOfProp          = require("./addons/index-of-prop");
 
 var Reflux               = require("reflux");
