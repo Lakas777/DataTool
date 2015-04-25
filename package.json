@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "main": "app.js",
   "scripts": {
-    "start": "gulp"
+    "start": "gulp",
+    "lint": "gulp lint"
   },
   "dependencies": {
     "MD5": "^1.2.1",

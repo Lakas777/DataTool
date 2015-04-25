@@ -78,8 +78,32 @@ var Visualization = CreateClass({
     }
   },
 
-  componentDidUpdate: function(nextProps) {
+  componentDidUpdate: function() {
     this.renderVisualization();
+  },
+
+  getDomain: function(data) {
+    var rangeType = this.props.layer.vis.rangeType;
+
+    var calculateDomain = {
+      normalized: function()  { return [ 0, 1 ]; },
+      percentage: function()  { return [ 0, 100 ]; },
+      minmax:     function(d) {
+        return [
+          d3.min(d, function(d) { return d.value; }),
+          d3.max(d, function(d) { return d.value; })
+        ];
+      }
+    };
+
+    return calculateDomain[rangeType](data);
+  },
+
+  getColors: function() {
+    var colorNum        = this.props.layer.vis.colorNum;
+    var colorPalette    = this.props.layer.vis.colorPalette;
+
+    return colorbrewer[colorPalette][colorNum];
   },
 
   getFile: function() {
@@ -149,17 +173,20 @@ var Visualization = CreateClass({
   },
 
   renderMap: function(svg) {
-    var width                 = this.props.width;
-    var height                = this.props.height;
-    var scale                 = Math.min(width, height) * 5;
-    var data                  = this.getData();
-    var columnGeo             = this.props.layer.geo.type;
-    var columnGeoIndex        = indexOfProp(Config.dataTypes, "key", columnGeo);
-    var columnGeoAccessor     = getIn(Config.dataTypes, [ columnGeoIndex, "accessor" ]);
-    var columnGeoCodeAccessor = getIn(Config.dataTypes, [ columnGeoIndex, "codeAccessor" ]);
-    var columnGeoTopojson     = getIn(Config.dataTypes, [ columnGeoIndex, "topojson" ]);
-    var columnVisRangeType    = this.props.layer.vis.rangeType;
-    var updateTriangle        = this.updateTriangle;
+    var width           = this.props.width;
+    var height          = this.props.height;
+    var scale           = Math.min(width, height) * 4.5;
+
+    var colors          = this.getColors();
+    var data            = this.getData();
+    var domain          = this.getDomain();
+
+    var dataType        = getIn(Config.dataTypes, indexOfProp(Config.dataTypes, "key", this.props.layer.geo.type));
+    var geoAccessor     = getIn(dataType, "accessor");
+    var geoCodeAccessor = getIn(dataType, "codeAccessor");
+    var geoTopojson     = getIn(dataType, "topojson");
+
+    var updateTriangle  = this.updateTriangle;
 
     if (svg.select(".legend").empty()) {
       svg.append("g").attr("class", "map");
@@ -172,20 +199,6 @@ var Visualization = CreateClass({
       .scale(scale)
       .translate([ width / 2, height / 2 ]);
 
-    var calculateDomain = {
-      normalized: function()  { return [ 0, 1 ]; },
-      percentage: function()  { return [ 0, 100 ]; },
-      minmax:     function(d) {
-        return [
-          d3.min(d, function(d) { return d.value; }),
-          d3.max(d, function(d) { return d.value; })
-        ];
-      }
-    };
-
-    var domain = calculateDomain[columnVisRangeType](data);
-    var colors = colorbrewer.PuBu[7]; // TODO colors should be set in toolbox
-
     var colorScale = d3.scale.quantize()
       .domain(domain)
       .range(colors);
@@ -197,12 +210,18 @@ var Visualization = CreateClass({
       if (!error) {
         var geoData = topojson.feature(
           geojson,
-          getIn(geojson, columnGeoTopojson)
+          getIn(geojson, geoTopojson)
         ).features;
 
         var paths = map.selectAll("path")
           .data(geoData, function(d) {
-            return getIn(d, columnGeoCodeAccessor);
+            return getIn(d, geoCodeAccessor);
+          })
+          .each(function(d) {
+            var key   = getIn(d, geoAccessor);
+            var index = indexOfProp(data, "geo", key, { fuzzy: true })[0];
+
+            d.value = getIn(data, [ index, "value" ]);
           });
 
         paths
@@ -216,64 +235,58 @@ var Visualization = CreateClass({
 
         paths
           .transition()
-          .duration(500)
+          .duration(Config.visualization.animationDuration)
           .attr("fill-opacity", 1)
           .attr("fill", function(d) {
-            var color = "#eee";
-            var key   = getIn(d, columnGeoAccessor);
-            var index = indexOfProp(data, "geo", key, { fuzzy: true })[0];
-
-            if (index >= 0) { color = colorScale(data[index].value); }
-
-            return color;
+            return d.value ? colorScale(d.value) : "#eee";
           });
 
         paths
           .exit()
           .transition()
-          .duration(500)
+          .duration(Config.visualization.animationDuration)
           .attr("fill-opacity", 0)
           .attr("stroke-opacity", 0)
           .remove();
 
-
         paths
-          .on("mouseover", function(d) {
-            var key   = getIn(d, columnGeoAccessor);
-            var index = indexOfProp(data, "geo", key, { fuzzy: true })[0];
-            var value  = data[index].value;
-
-            updateTriangle(svg, domain, colors, value);
-          })
-          .on("mouseout", function() {
-            updateTriangle(svg);
-          });
+          .on("mouseover", function(d) { updateTriangle(svg, d.value); })
+          .on("mouseout",  function()  { updateTriangle(svg); });
       }
     });
   },
 
   renderLegend: function(svg) {
-    var width  = this.props.width;
-    var height = this.props.height;
-    var size   = 20;
-    var margin = { bottom: 50, right: 30 };
-    var colors = colorbrewer.PuBu[7]; // TODO: read this from layer info
+    var width        = this.props.width;
+    var height       = this.props.height;
+    var size         = Config.visualization.legendRectSize;
+    var margin       = Config.visualization.legendMargin;
+
+    var colorNum     = this.props.layer.vis.colorNum;
+    var colorPalette = this.props.layer.vis.colorPalette;
+    var colors       = colorbrewer[colorPalette][colorNum];
+
+    var calculateTranslate = function() {
+      var x = width - size - margin.right;
+      var y = height - size * colors.length - margin.bottom;
+
+      return "translate(" + x + "," + y + ")";
+    };
 
     if (svg.select(".legend").empty()) {
-      svg.append("g")
+      svg
+        .append("g")
         .attr("class", "legend")
-        .attr("transform", function() {
-          var x = width - size - margin.right;
-          var y = height - size * colors.length - margin.bottom;
-
-          return "translate(" + x + "," + y + ")";
-        });
+        .attr("transform", calculateTranslate);
     }
 
     var legend = svg.select(".legend");
+    var rects  = legend.selectAll("rect").data(colors);
 
-    var rects = legend.selectAll("rect")
-      .data(colors);
+    legend
+      .transition()
+      .duration(Config.visualization.animationDuration)
+      .attr("transform", calculateTranslate);
 
     rects
       .enter()
@@ -286,19 +299,19 @@ var Visualization = CreateClass({
 
     rects
       .transition()
-      .duration(500)
+      .duration(Config.visualization.animationDuration)
       .attr("y", function(_, i) { return size * (colors.length - 1 - i); })
       .attr("fill", function(d) { return d; });
 
     rects
       .exit()
       .transition()
-      .duration(500)
+      .duration(Config.visualization.animationDuration)
       .attr("fill-opacity", 0)
       .remove();
   },
 
-  renderLegendPointer: function(svg) {
+  renderTriangle: function(svg) {
     if (svg.select(".triangle").empty()) {
       var group = svg.append("g")
         .attr("class", "triangle")
@@ -317,49 +330,52 @@ var Visualization = CreateClass({
     }
   },
 
-  updateTriangle: function(svg, domain, colors, value) {
+  updateTriangle: function(svg, value) {
     var triangle = svg.select(".triangle");
-    var text     = triangle.select("text");
 
     if (value) {
-      var width    = this.props.width;
-      var height   = this.props.height;
-      var size     = 20;
-      var margin   = { bottom: 50, right: 30 };
+      var text      = triangle.select("text");
+      var rangeType = this.props.layer.vis.rangeType;
+
+      var domain    = this.getDomain();
+      var colors    = this.getColors();
+
+      var width     = this.props.width;
+      var height    = this.props.height;
+      var size      = Config.visualization.legendRectSize;
+      var margin    = Config.visualization.legendMargin;
 
       var scale = d3.scale.linear()
         .domain(domain)
         .range([ colors.length * size, 0 ]);
 
+      var calculateTranslate = function(value) {
+        var x = width - size - margin.right - 8;
+        var y = height - size * colors.length - margin.bottom + value;
+
+        return "translate(" + x + "," + y + ")";
+      };
+
       triangle
         .attr("transform", function() {
-          var currentTransform = d3.select(this).attr("transform");
-
-          if (!currentTransform) {
-            var x = width - size - margin.right - 8;
-            var y = height - size * colors.length - margin.bottom + scale(value);
-
-            currentTransform = "translate(" + x + "," + y + ")";
-          }
-
-          return currentTransform;
+          return d3.select(this).attr("transform") || calculateTranslate(scale(value));
         })
         .transition()
-        .duration(500)
+        .duration(Config.visualization.animationDuration)
         .attr("fill-opacity", 1)
-        .attr("transform", function() {
-          var x = width - size - margin.right - 8;
-          var y = height - size * colors.length - margin.bottom + scale(value);
+        .attr("transform", calculateTranslate.bind(null, scale(value)));
 
-          return "translate(" + x + "," + y + ")";
-        });
+      text.text(function() {
+        var num    = parseFloat(value).toFixed(2);
+        var suffix = rangeType === "percentage" ? "%" : "";
 
-      text.text(parseFloat(value).toFixed(2));
+        return num + suffix;
+      });
     }
     else {
       triangle
         .transition()
-        .duration(500)
+        .duration(Config.visualization.animationDuration)
         .attr("fill-opacity", 0);
     }
   },
@@ -371,16 +387,14 @@ var Visualization = CreateClass({
       [ "layer", "vis", "column"      ],
       [ "layer", "vis", "mappingType" ],
       [ "layer", "vis", "rangeType"   ]
-    ].every(function(keys) {
-      return getIn(this.props, keys, false) !== false;
-    }.bind(this));
+    ].every(getIn.bind(null, this.props));
 
     if (canRenderVisualization) {
       var svg = d3.select(React.findDOMNode(this));
 
       this.renderMap(svg);
       this.renderLegend(svg);
-      this.renderLegendPointer(svg);
+      this.renderTriangle(svg);
     }
   },
 
@@ -426,6 +440,9 @@ var VisualizationWrapper = React.createClass({
   render: function() {
     var width  = this.state.window.width / 2;
     var height = this.state.window.height / 2;
+
+    if (height > 0) { height = height - 30; }
+
     var layer  = getIn(this.state.layers, this.state.layerIndex);
 
     return React.DOM.div(

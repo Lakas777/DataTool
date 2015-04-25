@@ -21,9 +21,11 @@ var TestData = {
           type:   "province"
         },
         vis:      {
-          column:      "KACZYŃSKI Jarosław Aleksander",
-          mappingType: "avg",
-          rangeType:   "percentage"
+          column:       "KACZYŃSKI Jarosław Aleksander",
+          mappingType:  "avg",
+          rangeType:    "percentage",
+          colorNum:     "7",
+          colorPalette: "Blues"
         }
       },
       {
@@ -35,9 +37,11 @@ var TestData = {
           type:   "province"
         },
         vis:      {
-          column:      "KOMOROWSKI Bronisław Maria",
-          mappingType: "avg",
-          rangeType:   "percentage"
+          column:       "KOMOROWSKI Bronisław Maria",
+          mappingType:  "avg",
+          rangeType:    "percentage",
+          colorNum:     "7",
+          colorPalette: "Blues"
         }
       }
     ],

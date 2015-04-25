@@ -110,6 +110,20 @@ var ToolboxVisData = CreateClass({
     });
   },
 
+  onChangeColorNum: function(colorNum) {
+    DocumentStoreActions.layerUpdate({
+      id:  this.props.layerId,
+      vis: { colorNum: colorNum }
+    });
+  },
+
+  onChangeColorPalette: function(colorPalette) {
+    DocumentStoreActions.layerUpdate({
+      id:  this.props.layerId,
+      vis: { colorPalette: colorPalette }
+    });
+  },
+
   render: function() {
     return React.DOM.div(
       { className: "panel panel-default " },
@@ -143,6 +157,20 @@ var ToolboxVisData = CreateClass({
           nameGetter:  function(d) { return d.name; },
           valueGetter: function(d) { return d.key; },
           data:        Config.rangeTypes
+        }),
+        Selection({
+          name:        "Kolory",
+          className:   "col-sm-3",
+          selected:    getIn(this.state, [ "layer", "vis", "colorNum" ]),
+          onChange:    this.onChangeColorNum,
+          data:        Config.colors.nums
+        }),
+        Selection({
+          name:        "Paleta",
+          className:   "col-sm-3",
+          selected:    getIn(this.state, [ "layer", "vis", "colorPalette" ]),
+          onChange:    this.onChangeColorPalette,
+          data:        Config.colors.palettes
         })
       )
     );
