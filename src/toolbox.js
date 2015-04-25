@@ -4,15 +4,18 @@ var LinkedStateMixin       = require("react/addons").addons.LinkedStateMixin;
 var MD5                    = require("MD5");
 var classNames             = require("classnames");
 
-var Config                 = require("./config");
 var CreateClass            = require("./addons/create-class");
+var CSSTransitionGroup     = require("./addons/css-transition-group");
 
 var Reflux                 = require("reflux");
 var DocumentStore          = require("./store").DocumentStore;
 var DocumentStoreActions   = require("./store").DocumentStoreActions;
 
-var Tabs                   = React.createFactory(require("./tabs"));
+var Config                 = require("./config");
+
+var Modal                  = React.createFactory(require("./modal"));
 var Selection              = React.createFactory(require("./selection"));
+var Tabs                   = React.createFactory(require("./tabs"));
 
 var getIn                  = require("./lib/insides").getIn;
 var buildObject            = require("./lib/insides").buildObject;
@@ -255,6 +258,63 @@ var ToolboxTab = CreateClass({
   }
 });
 
+var ToolboxRenameModal = CreateClass({
+  mixins: [ LinkedStateMixin ],
+
+  getInitialState: function() {
+    return { name: this.props.name };
+  },
+
+  onClickClose: function() {
+    this.props.onClickClose();
+  },
+
+  onClickSave: function() {
+    DocumentStoreActions.layerUpdate({
+      id:   this.props.layerId,
+      name: this.state.name
+    });
+
+    this.props.onClickSave();
+  },
+
+  render: function() {
+    var body = React.DOM.div(
+      { className: "form-inline rename-layer-form-group" },
+      React.DOM.div(
+        { className: "form-group col-md-12" },
+        React.DOM.label({ className: "col-md-2" }, "Nazwa"),
+        React.DOM.input({ type: "text", className: "col-md-4 form-control", valueLink: this.linkState("name") })
+      )
+    );
+
+    var footer = React.DOM.div(
+      { className: "col-md-6 col-md-offset-3" },
+      React.DOM.div(
+        {
+          className: "btn btn-default col-md-5",
+          onClick:   this.onClickClose
+        },
+        "Anuluj"
+      ),
+      React.DOM.div(
+        {
+          className: "btn btn-success col-md-5 col-md-offset-2",
+          onClick:   this.onClickSave
+        },
+        "Zapisz"
+      )
+    );
+
+    return Modal({
+      title:        "Zmień nazwę warstwy",
+      body:         body,
+      footer:       footer,
+      onClickClose: this.onClickClose
+    });
+  }
+});
+
 var Toolbox = React.createClass({
   mixins: [
     Reflux.connectFilter(DocumentStore, "layers", function(data) {
@@ -266,34 +326,63 @@ var Toolbox = React.createClass({
     router: React.PropTypes.func.isRequired
   },
 
+  getInitialState: function() {
+    return { modal: null };
+  },
+
   componentDidMount: function() {
     var params = this.context.router.getCurrentParams();
     DocumentStoreActions.load({ id: params.id });
+  },
+
+  closeModal: function() {
+    this.setState({ modal: null });
   },
 
   onClickRemoveLayer: function(layer) {
     DocumentStoreActions.layerRemove({ id: layer.layerId });
   },
 
+  onClickRenameLayer: function(layer) {
+    var modal = ToolboxRenameModal(extend(layer, {
+      onClickSave:  this.closeModal,
+      onClickClose: this.closeModal
+    }));
+
+    this.setState({ modal: modal });
+  },
+
   renderTabTitle: function(tab) {
     var closeButton = React.DOM.span(
       {
-        className: "btn btn-xs btn-default remove-tab-button",
+        className: "btn btn-xs btn-default",
         onClick:   this.onClickRemoveLayer.bind(null, tab)
       },
       "✕"
     );
 
+    var renameButton = React.DOM.span(
+      {
+        className: "btn btn-xs btn-default",
+        onClick:   this.onClickRenameLayer.bind(null, tab)
+      },
+      "✎"
+    );
+
     return React.DOM.div(
       null,
       tab.name,
-      (tab.name !== "+") ? closeButton : null
+      (tab.name !== "+") ? React.DOM.div({ className: "layer-tab-buttons btn-group" }, renameButton, closeButton) : null
     );
   },
 
   render: function() {
     return React.DOM.div(
       { className: "toolbox" },
+      CSSTransitionGroup(
+        { transitionName: "fade" },
+        this.state.modal ? React.DOM.div({ key: "modal" }, this.state.modal) : null
+      ),
       Tabs(
         { titleGetter: this.renderTabTitle },
         this.state.layers
