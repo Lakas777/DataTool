@@ -86,16 +86,16 @@ var DocumentNewModal = CreateClass({
 var DocumentList = React.createClass({
   mixins: [ Reflux.connect(DocumentsStore, "data") ],
 
-  componentDidMount: function() {
-    DocumentsStoreActions.load();
-  },
-
   contextTypes: {
     router: React.PropTypes.func.isRequired
   },
 
   getInitialState: function() {
     return { modal: null };
+  },
+
+  componentDidMount: function() {
+    DocumentsStoreActions.load();
   },
 
   onClickRow: function(document) {
