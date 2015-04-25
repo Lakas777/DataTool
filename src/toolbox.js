@@ -251,10 +251,8 @@ var ToolboxTab = CreateClass({
     return React.DOM.div(
       { className: "toolbox-tab" },
       ToolboxFileChoose({ layerId: this.props.layerId }),
-      [
         ToolboxGeoData({ key: "geodata", layerId: this.props.layerId }),
         ToolboxVisData({ key: "visdata", layerId: this.props.layerId })
-      ]
     );
   }
 });

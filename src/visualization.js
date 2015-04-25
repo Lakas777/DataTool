@@ -1,15 +1,19 @@
-var React       = require("react");
-var OnResize    = require("react-window-mixins").OnResize;
-var d3          = require("d3");
-var topojson    = require("topojson");
-var colorbrewer = require("colorbrewer");
-var classNames  = require("classnames");
+var React                = require("react");
+var OnResize             = require("react-window-mixins").OnResize;
+var d3                   = require("d3");
+var topojson             = require("topojson");
+var colorbrewer          = require("colorbrewer");
+var classNames           = require("classnames");
 
-var Config      = require("./config");
-var CreateClass = require("./addons/create-class");
+var Config               = require("./config");
+var CreateClass          = require("./addons/create-class");
 
-var getIn       = require("./addons/get-in");
-var indexOfProp = require("./addons/index-of-prop");
+var Reflux               = require("reflux");
+var DocumentStore        = require("./store").DocumentStore;
+var DocumentStoreActions = require("./store").DocumentStoreActions;
+
+var getIn                = require("./addons/get-in");
+var indexOfProp          = require("./addons/index-of-prop");
 
 var stringToNumber = function(string) {
   string = string || "";
@@ -18,9 +22,7 @@ var stringToNumber = function(string) {
 
 var LayerChooser = CreateClass({
   getInitialState: function() {
-    return {
-      selectedIndex: 0
-    };
+    return { selectedIndex: 0 };
   },
 
   onClickLayer: function(index) {
@@ -39,6 +41,7 @@ var LayerChooser = CreateClass({
 
     return React.DOM.button(
       {
+        key:       index,
         className: classNames("layer btn", {
           "btn-default": index !== selectedIndex,
           "btn-primary": index === selectedIndex
@@ -74,6 +77,18 @@ var Visualization = CreateClass({
     this.renderVisualization();
   },
 
+  canRenderVisualization: function() {
+    return [
+      [ "layer", "geo", "column" ],
+      [ "layer", "geo", "type" ],
+      [ "layer", "vis", "column" ],
+      [ "layer", "vis", "mappingType" ],
+      [ "layer", "vis", "rangeType" ]
+    ].every(function(keys) {
+      return getIn(this.props, keys, false) !== false;
+    }.bind(this));
+  },
+
   getFile: function() {
     return this.props.files.filter(function(file) {
       return file.id === this.props.layer.fileId;
@@ -81,19 +96,10 @@ var Visualization = CreateClass({
   },
 
   getData: function() {
-    var data        = getIn(this.getFile(), "data", false);
-    var columnGeo   = getIn(this.props.layer, "geo.column", false);
-    var columnVis   = getIn(this.props.layer, "vis.column", false);
-    var mappingType = getIn(this.props.layer, "vis.mappingType", false);
-
-    var canCalculate = [
-      data,
-      columnGeo,
-      columnVis,
-      mappingType
-    ].every(function(status) { return status; });
-
-    if (!canCalculate) { return []; }
+    var data        = this.getFile().data;
+    var columnGeo   = this.props.layer.geo.column;
+    var columnVis   = this.props.layer.vis.column;
+    var mappingType = this.props.layer.vis.mappingType;
 
     data = data
       .reduce(function(memo, d) {
@@ -137,7 +143,7 @@ var Visualization = CreateClass({
   },
 
   getGeoJson: function(callback) {
-    var type  = getIn(this.props.layer, "geo.type");
+    var type  = this.props.layer.geo.type;
     var index = indexOfProp(Config.dataTypes, "key", type);
     var url   = getIn(Config.dataTypes, [ index, "url" ]);
 
@@ -150,17 +156,19 @@ var Visualization = CreateClass({
   },
 
   renderVisualization: function() {
+    if (!this.canRenderVisualization()) { return; }
+
     var svg                   = d3.select(React.findDOMNode(this));
     var width                 = this.props.width;
     var height                = this.props.height;
     var scale                 = Math.min(width, height) * 5;
     var data                  = this.getData();
-    var columnGeo             = getIn(this.props.layer, "geo.type");
+    var columnGeo             = this.props.layer.geo.type;
     var columnGeoIndex        = indexOfProp(Config.dataTypes, "key", columnGeo);
     var columnGeoAccessor     = getIn(Config.dataTypes, [ columnGeoIndex, "accessor" ]);
     var columnGeoCodeAccessor = getIn(Config.dataTypes, [ columnGeoIndex, "codeAccessor" ]);
     var columnGeoTopojson     = getIn(Config.dataTypes, [ columnGeoIndex, "topojson" ]);
-    var columnVisRangeType    = getIn(this.props.layer, "vis.rangeType");
+    var columnVisRangeType    = this.props.layer.vis.rangeType;
 
     var projection = d3.geo.mercator()
       .center([ 20, 51.8 ])
@@ -243,10 +251,29 @@ var Visualization = CreateClass({
 });
 
 var VisualizationWrapper = React.createClass({
-  mixins: [ OnResize ],
+  mixins: [
+    OnResize,
+
+    Reflux.connectFilter(DocumentStore, "files", function(data) {
+      return getIn(data, "files", []);
+    }),
+
+    Reflux.connectFilter(DocumentStore, "layers", function(data) {
+      return getIn(data, "layers", []);
+    })
+  ],
+
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   getInitialState: function() {
     return { layerIndex: 0 };
+  },
+
+  componentDidMount: function() {
+    var params = this.context.router.getCurrentParams();
+    DocumentStoreActions.load({ id: params.id });
   },
 
   onClickLayer: function(layerIndex) {
@@ -256,22 +283,18 @@ var VisualizationWrapper = React.createClass({
   render: function() {
     var width  = this.state.window.width / 2;
     var height = this.state.window.height / 2;
-
-    var renderVisualization = [
-      this.props.layers,
-      this.props.files
-    ].every(function(data) { return getIn(data, 0, false); });
+    var layer  = getIn(this.state.layers, this.state.layerIndex);
 
     return React.DOM.div(
       { className: "visualization-wrapper" },
-      renderVisualization ? Visualization({
+      Visualization({
         width:  width,
         height: height,
-        files:  this.props.files,
-        layer:  getIn(this.props.layers, this.state.layerIndex)
-      }) : null,
+        files:  this.state.files,
+        layer:  layer
+      }),
       LayerChooser({
-        layers:       this.props.layers || [],
+        layers:       this.state.layers,
         onClickLayer: this.onClickLayer
       })
     );
