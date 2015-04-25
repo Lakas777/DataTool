@@ -91,21 +91,21 @@ var ToolboxVisData = CreateClass({
 
   onChangeColumn: function(column) {
     DocumentStoreActions.layerUpdate({
-      id: this.props.layerId,
+      id:  this.props.layerId,
       vis: { column: column }
     });
   },
 
   onChangeMappingType: function(mappingType) {
     DocumentStoreActions.layerUpdate({
-      id: this.props.layerId,
+      id:  this.props.layerId,
       vis: { mappingType: mappingType }
     });
   },
 
   onChangeRangeType: function(rangeType) {
     DocumentStoreActions.layerUpdate({
-      id: this.props.layerId,
+      id:  this.props.layerId,
       vis: { rangeType: rangeType }
     });
   },
@@ -166,14 +166,14 @@ var ToolboxGeoData = CreateClass({
 
   onChangeColumn: function(column) {
     DocumentStoreActions.layerUpdate({
-      id: this.props.layerId,
+      id:  this.props.layerId,
       geo: { column: column }
     });
   },
 
   onChangeType: function(type) {
     DocumentStoreActions.layerUpdate({
-      id: this.props.layerId,
+      id:  this.props.layerId,
       geo: { type: type }
     });
   },
@@ -259,8 +259,12 @@ var ToolboxTab = CreateClass({
   }
 });
 
-var ToolboxWrapper = React.createClass({
-  mixins: [ Reflux.connect(DocumentStore, "data") ],
+var Toolbox = React.createClass({
+  mixins: [
+    Reflux.connectFilter(DocumentStore, "layers", function(data) {
+      return getIn(data, "layers", []);
+    })
+  ],
 
   contextTypes: {
     router: React.PropTypes.func.isRequired
@@ -292,13 +296,11 @@ var ToolboxWrapper = React.createClass({
   },
 
   render: function() {
-    var layers = getIn(this.state, [ "data", "layers" ], []);
-
     return React.DOM.div(
       { className: "toolbox" },
       Tabs(
         { titleGetter: this.renderTabTitle },
-        layers
+        this.state.layers
           .map(function(tab, index) {
             return ToolboxTab({
               key:     index,
@@ -318,4 +320,4 @@ var ToolboxWrapper = React.createClass({
   }
 });
 
-module.exports = ToolboxWrapper;
+module.exports = Toolbox;

@@ -1,16 +1,19 @@
 /*global FileReader */
 
-var React       = require("react");
-var OnResize    = require("react-window-mixins").OnResize;
-var MD5         = require("MD5");
-var classNames  = require("classnames");
-var d3          = require("d3");
+var React                = require("react");
+var OnResize             = require("react-window-mixins").OnResize;
+var MD5                  = require("MD5");
+var classNames           = require("classnames");
+var d3                   = require("d3");
 
-var Config      = require("./config");
-var CreateClass = require("./addons/create-class");
-var Selection   = React.createFactory(require("./selection"));
+var Config               = require("./config");
+var DocumentStoreActions = require("./store").DocumentStoreActions;
 
-var FileUpload = CreateClass({
+var Selection            = React.createFactory(require("./selection"));
+
+var FileNew = React.createClass({
+  mixins: [ OnResize ],
+
   getInitialState: function() {
     return {
       fileName:    "",
@@ -73,7 +76,7 @@ var FileUpload = CreateClass({
     var parser      = (delimiter === "<tab>") ? d3.tsv : d3.dsv(delimiter);
     var fileParsed  = parser.parse(fileContent);
 
-    this.props.onFileDataUpdate({
+    DocumentStoreActions.fileUpdate({
       name: fileName,
       id:   fileId,
       data: fileParsed
@@ -149,28 +152,15 @@ var FileUpload = CreateClass({
   },
 
   render: function() {
-    return React.DOM.div(
-      { className: "upload-new-file" },
-      this.renderUploadStep(),
-      this.renderParseStep()
-      // this.state.uploaded ? this.renderParseStep() : null
-    );
-  }
-});
-
-var FileNew = React.createClass({
-  mixins: [ OnResize ],
-
-  onFileDataUpdate: function(data) {
-    this.props.onFileDataUpdate(data);
-  },
-
-  render: function() {
     var height = this.state.window.height - 135;
 
     return React.DOM.div(
-      { style: { height: height } },
-      FileUpload({ onFileDataUpdate: this.onFileDataUpdate })
+      {
+        className: "upload-new-file",
+        style: { height: height }
+      },
+      this.renderUploadStep(),
+      this.state.uploaded ? this.renderParseStep() : null
     );
   }
 });

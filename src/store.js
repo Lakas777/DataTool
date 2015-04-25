@@ -55,9 +55,8 @@ var DocumentEmpty = {
 var DocumentStoreActions = Reflux.createActions([
   "load",
 
-  // TODO: fileCreate?
+  "fileCreate",
   "fileRemove",
-  "fileUpdate",
 
   "layerCreate",
   "layerUpdate",
@@ -80,6 +79,20 @@ var DocumentStore = Reflux.createStore({
     }.bind(this));
   },
 
+  onFileCreate: function(data) {
+    var document = this.document;
+
+    if (document.files instanceof Array) {
+      document.files.push(data);
+    }
+    else {
+      document.files = [ data ];
+    }
+
+    Api.updateDocument(document);
+    this.trigger(document);
+  },
+
   onFileRemove: function(args) {
     var fileId   = args.id;
     var document = this.document;
@@ -91,20 +104,6 @@ var DocumentStore = Reflux.createStore({
     document.layers = document.layers.filter(function(layer) {
       return layer.fileId !== fileId;
     });
-
-    Api.updateDocument(document);
-    this.trigger(document);
-  },
-
-  onFileUpdate: function(data) {
-    var document = this.document;
-
-    if (document.files instanceof Array) {
-      document.files.push(data);
-    }
-    else {
-      document.files = [ data ];
-    }
 
     Api.updateDocument(document);
     this.trigger(document);

@@ -43,10 +43,6 @@ var RightView = CreateClass({
     DocumentStoreActions.load({ id: params.id });
   },
 
-  onFileDataUpdate: function(data) {
-    DocumentStoreActions.fileUpdate(data);
-  },
-
   onClickRemoveFile: function(fileId) {
     this.setState({ modal: null });
     DocumentStoreActions.fileRemove({ id: fileId });
@@ -115,10 +111,9 @@ var RightView = CreateClass({
             })
             .concat([
               FileNew({
-                key:              "new-file-tab-button",
-                name:             "+",
-                className:        "new-file-tab-button",
-                onFileDataUpdate: this.onFileDataUpdate
+                key:       "new-file-tab-button",
+                name:      "+",
+                className: "new-file-tab-button"
               })
             ])
         )
@@ -140,118 +135,5 @@ var DocumentEdit = React.createClass({
     );
   }
 });
-
-// var DocumentEditWrapper = React.createClass({
-//   contextTypes: {
-//     router: React.PropTypes.func.isRequired
-//   },
-
-//   getInitialState: function() {
-//     return { data: [] };
-//   },
-
-//   componentDidMount: function() {
-//     this.getData();
-//   },
-
-//   getData: function() {
-//     var params = this.context.router.getCurrentParams();
-
-//     this.props.api.getDocument(params.id, function(data) {
-//       this.setState({ data: data });
-//     }.bind(this));
-//   },
-
-//   onLayerDataUpdate: function(data) {
-//     var document = this.state.data;
-//     var index    = indexOfProp(document.layers, "id", data.id);
-
-//     var emptyDocument = {
-//       id:       data.id,
-//       fileId:   null,
-//       name:     null,
-//       geo:      {
-//         column: null,
-//         type:   null
-//       },
-//       vis:      {
-//         column: null
-//       }
-//     };
-
-//     // if there's layer with given id - update it
-//     if (index >= 0) {
-//       // changing fileId in layer should resets this layer to default values
-//       if (data.fileId !== undefined) {
-//         document.layers[index] = extend(true, emptyDocument, {
-//           fileId: data.fileId,
-//           name:   document.layers[index].name
-//         });
-//       }
-//       else {
-//         // otherwise just update the data in layer
-//         document.layers[index] = extend(true, document.layers[index], data);
-//       }
-//     }
-//     // otherwise add new layer
-//     else {
-//       document.layers.push(extend(true, emptyDocument, data));
-//     }
-
-//     this.setState({ data: document });
-//     this.props.api.updateDocument(document);
-//   },
-
-//   onLayerRemove: function(layerId) {
-//     var document = this.state.data;
-
-//     document.layers = document.layers.filter(function(layer) {
-//       return layer.id !== layerId;
-//     });
-
-//     this.setState({ data: document });
-//     this.props.api.updateDocument(document);
-//   },
-
-//   onFileDataUpdate: function(data) {
-//     var document = this.state.data;
-
-//     if (document.files instanceof Array) {
-//       document.files.push(data);
-//     }
-//     else {
-//       document.files = [ data ];
-//     }
-
-//     this.setState({ data: document });
-//     this.props.api.updateDocument(document);
-//   },
-
-//   onFileRemove: function(fileId) {
-//     var document = this.state.data;
-
-//     document.files = document.files.filter(function(file) {
-//       return file.id !== fileId;
-//     });
-
-//     document.layers = document.layers.filter(function(layer) {
-//       return layer.fileId !== fileId;
-//     });
-
-//     this.setState({ data: document });
-//     this.props.api.updateDocument(document);
-//   },
-
-//   render: function() {
-//     return DocumentEdit({
-//       data:              this.state.data,
-//       getData:           this.getData,
-//       onLayerDataUpdate: this.onLayerDataUpdate,
-//       onLayerRemove:     this.onLayerRemove,
-//       onFileDataUpdate:  this.onFileDataUpdate,
-//       onFileRemove:      this.onFileRemove
-//     });
-//   }
-// });
 
 module.exports = DocumentEdit;
