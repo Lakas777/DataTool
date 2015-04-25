@@ -216,7 +216,7 @@ var ToolboxFileChoose = CreateClass({
 
     Reflux.connectFilter(DocumentStore, "fileId", function(data) {
       return layerFromId(data, this.props.layerId).fileId;
-    }),
+    })
   ],
 
   onChangeFile: function(fileId) {
@@ -310,7 +310,7 @@ var Toolbox = React.createClass({
             ToolboxNewLayer({
               key:       "new-layer-tab-button",
               name:      "+",
-              className: "new-layer-tab-button",
+              className: "new-layer-tab-button"
             })
           ])
       )

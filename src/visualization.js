@@ -1,3 +1,5 @@
+/*jslint unparam: true */
+
 var React                = require("react");
 var OnResize             = require("react-window-mixins").OnResize;
 var d3                   = require("d3");
@@ -62,31 +64,22 @@ var LayerChooser = CreateClass({
 
 var Visualization = CreateClass({
   getDefaultProps: function() {
-    return {
-      data:   [],
-      width:  640,
-      height: 480
-    };
+    return { width: 640, height: 480 };
   },
 
   componentDidMount: function() {
     this.renderVisualization();
   },
 
-  componentDidUpdate: function() {
-    this.renderVisualization();
+  componentWillUpdate: function(nextProps) {
+    // dirty workaround for resizing browser window
+    if (nextProps.width !== this.props.width || nextProps.height !== this.props.height) {
+      d3.select(React.findDOMNode(this)).selectAll("*").remove();
+    }
   },
 
-  canRenderVisualization: function() {
-    return [
-      [ "layer", "geo", "column" ],
-      [ "layer", "geo", "type" ],
-      [ "layer", "vis", "column" ],
-      [ "layer", "vis", "mappingType" ],
-      [ "layer", "vis", "rangeType" ]
-    ].every(function(keys) {
-      return getIn(this.props, keys, false) !== false;
-    }.bind(this));
+  componentDidUpdate: function(nextProps) {
+    this.renderVisualization();
   },
 
   getFile: function() {
@@ -155,10 +148,7 @@ var Visualization = CreateClass({
     }
   },
 
-  renderVisualization: function() {
-    if (!this.canRenderVisualization()) { return; }
-
-    var svg                   = d3.select(React.findDOMNode(this));
+  renderMap: function(svg) {
     var width                 = this.props.width;
     var height                = this.props.height;
     var scale                 = Math.min(width, height) * 5;
@@ -169,6 +159,13 @@ var Visualization = CreateClass({
     var columnGeoCodeAccessor = getIn(Config.dataTypes, [ columnGeoIndex, "codeAccessor" ]);
     var columnGeoTopojson     = getIn(Config.dataTypes, [ columnGeoIndex, "topojson" ]);
     var columnVisRangeType    = this.props.layer.vis.rangeType;
+    var updateTriangle        = this.updateTriangle;
+
+    if (svg.select(".legend").empty()) {
+      svg.append("g").attr("class", "map");
+    }
+
+    var map = svg.select(".map");
 
     var projection = d3.geo.mercator()
       .center([ 20, 51.8 ])
@@ -187,10 +184,11 @@ var Visualization = CreateClass({
     };
 
     var domain = calculateDomain[columnVisRangeType](data);
+    var colors = colorbrewer.PuBu[7]; // TODO colors should be set in toolbox
 
     var colorScale = d3.scale.quantize()
       .domain(domain)
-      .range(colorbrewer.PuBu[7]); // TODO colors should be set in toolbox
+      .range(colors);
 
     var path = d3.geo.path()
       .projection(projection);
@@ -202,7 +200,7 @@ var Visualization = CreateClass({
           getIn(geojson, columnGeoTopojson)
         ).features;
 
-        var paths = svg.selectAll("path")
+        var paths = map.selectAll("path")
           .data(geoData, function(d) {
             return getIn(d, columnGeoCodeAccessor);
           });
@@ -237,8 +235,153 @@ var Visualization = CreateClass({
           .attr("fill-opacity", 0)
           .attr("stroke-opacity", 0)
           .remove();
+
+
+        paths
+          .on("mouseover", function(d) {
+            var key   = getIn(d, columnGeoAccessor);
+            var index = indexOfProp(data, "geo", key, { fuzzy: true })[0];
+            var value  = data[index].value;
+
+            updateTriangle(svg, domain, colors, value);
+          })
+          .on("mouseout", function() {
+            updateTriangle(svg);
+          });
       }
     });
+  },
+
+  renderLegend: function(svg) {
+    var width  = this.props.width;
+    var height = this.props.height;
+    var size   = 20;
+    var margin = { bottom: 50, right: 30 };
+    var colors = colorbrewer.PuBu[7]; // TODO: read this from layer info
+
+    if (svg.select(".legend").empty()) {
+      svg.append("g")
+        .attr("class", "legend")
+        .attr("transform", function() {
+          var x = width - size - margin.right;
+          var y = height - size * colors.length - margin.bottom;
+
+          return "translate(" + x + "," + y + ")";
+        });
+    }
+
+    var legend = svg.select(".legend");
+
+    var rects = legend.selectAll("rect")
+      .data(colors);
+
+    rects
+      .enter()
+      .append("rect")
+      .attr("x", 0)
+      .attr("y", function(_, i) { return size * (colors.length - 1 - i); })
+      .attr("width", size)
+      .attr("height", size)
+      .attr("fill", function(d) { return d; });
+
+    rects
+      .transition()
+      .duration(500)
+      .attr("y", function(_, i) { return size * (colors.length - 1 - i); })
+      .attr("fill", function(d) { return d; });
+
+    rects
+      .exit()
+      .transition()
+      .duration(500)
+      .attr("fill-opacity", 0)
+      .remove();
+  },
+
+  renderLegendPointer: function(svg) {
+    if (svg.select(".triangle").empty()) {
+      var group = svg.append("g")
+        .attr("class", "triangle")
+        .attr("fill-opacity", 0);
+
+      group
+        .append("path")
+        .attr("fill", "#333")
+        .attr("d", "M0,4l4,-4l-4,-4z");
+
+      group
+        .append("text")
+        .attr("y", 4)
+        .attr("x", -4)
+        .text("");
+    }
+  },
+
+  updateTriangle: function(svg, domain, colors, value) {
+    var triangle = svg.select(".triangle");
+    var text     = triangle.select("text");
+
+    if (value) {
+      var width    = this.props.width;
+      var height   = this.props.height;
+      var size     = 20;
+      var margin   = { bottom: 50, right: 30 };
+
+      var scale = d3.scale.linear()
+        .domain(domain)
+        .range([ colors.length * size, 0 ]);
+
+      triangle
+        .attr("transform", function() {
+          var currentTransform = d3.select(this).attr("transform");
+
+          if (!currentTransform) {
+            var x = width - size - margin.right - 8;
+            var y = height - size * colors.length - margin.bottom + scale(value);
+
+            currentTransform = "translate(" + x + "," + y + ")";
+          }
+
+          return currentTransform;
+        })
+        .transition()
+        .duration(500)
+        .attr("fill-opacity", 1)
+        .attr("transform", function() {
+          var x = width - size - margin.right - 8;
+          var y = height - size * colors.length - margin.bottom + scale(value);
+
+          return "translate(" + x + "," + y + ")";
+        });
+
+      text.text(parseFloat(value).toFixed(2));
+    }
+    else {
+      triangle
+        .transition()
+        .duration(500)
+        .attr("fill-opacity", 0);
+    }
+  },
+
+  renderVisualization: function() {
+    var canRenderVisualization = [
+      [ "layer", "geo", "column"      ],
+      [ "layer", "geo", "type"        ],
+      [ "layer", "vis", "column"      ],
+      [ "layer", "vis", "mappingType" ],
+      [ "layer", "vis", "rangeType"   ]
+    ].every(function(keys) {
+      return getIn(this.props, keys, false) !== false;
+    }.bind(this));
+
+    if (canRenderVisualization) {
+      var svg = d3.select(React.findDOMNode(this));
+
+      this.renderMap(svg);
+      this.renderLegend(svg);
+      this.renderLegendPointer(svg);
+    }
   },
 
   render: function() {
