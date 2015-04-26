@@ -76,7 +76,7 @@ var FileNew = React.createClass({
     var parser      = (delimiter === "<tab>") ? d3.tsv : d3.dsv(delimiter);
     var fileParsed  = parser.parse(fileContent);
 
-    DocumentStoreActions.fileUpdate({
+    DocumentStoreActions.fileCreate({
       name: fileName,
       id:   fileId,
       data: fileParsed

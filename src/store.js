@@ -13,9 +13,9 @@ var DocumentsStoreActions = Reflux.createActions([
 
 var DocumentsStore = Reflux.createStore({
   listenables: [ DocumentsStoreActions ],
-  documents:   [],
 
   getInitialState: function() {
+    this.documents = [];
     return this.documents;
   },
 
@@ -37,19 +37,34 @@ var DocumentsStore = Reflux.createStore({
 
 // Single document
 
-var DocumentEmpty = {
-  id:            null,
-  fileId:        null,
-  name:          null,
-  geo: {
-    column:      null,
-    type:        null
-  },
-  vis: {
-    column:      null,
-    mappingType: null,
-    rangeType:   null
-  }
+var extendEmptyDocument = function(data) {
+  var EmptyDocument = {
+    name:   undefined,
+    id:     undefined,
+    layers: [],
+    files:  []
+  };
+
+  return extend(true, {}, EmptyDocument, data);
+};
+
+var extendEmtpyLayer = function(data) {
+  var EmptyLayer = {
+    id:            undefined,
+    fileId:        undefined,
+    name:          undefined,
+    geo: {
+      column:      undefined,
+      type:        undefined
+    },
+    vis: {
+      column:      undefined,
+      mappingType: undefined,
+      rangeType:   undefined
+    }
+  };
+
+  return extend(true, {}, EmptyLayer, data);
 };
 
 var DocumentStoreActions = Reflux.createActions([
@@ -65,9 +80,9 @@ var DocumentStoreActions = Reflux.createActions([
 
 var DocumentStore = Reflux.createStore({
   listenables: [ DocumentStoreActions ],
-  document:    {},
 
   getInitialState: function() {
+    this.document = extendEmptyDocument();
     return this.document;
   },
 
@@ -111,7 +126,8 @@ var DocumentStore = Reflux.createStore({
 
   onLayerCreate: function(data) {
     var document = this.document;
-    document.layers.push(extend(true, DocumentEmpty, data));
+
+    document.layers = document.layers.concat([ extendEmtpyLayer(data) ]);
 
     Api.updateDocument(document);
     this.trigger(document);
@@ -124,14 +140,15 @@ var DocumentStore = Reflux.createStore({
     if (index >= 0) {
       // changing fileId in layer should reset this layer to default values
       if (data.fileId !== undefined) {
-        document.layers[index] = extend(true, DocumentEmpty, {
+        document.layers[index] = extendEmtpyLayer({
           fileId: data.fileId,
+          id:     document.layers[index].id,
           name:   document.layers[index].name
         });
       }
       else {
         // otherwise just update the data in layer
-        document.layers[index] = extend(true, document.layers[index], data);
+        document.layers[index] = extend(true, {}, document.layers[index], data);
       }
 
       Api.updateDocument(document);

@@ -382,11 +382,13 @@ var Visualization = CreateClass({
 
   renderVisualization: function() {
     var canRenderVisualization = [
-      [ "layer", "geo", "column"      ],
-      [ "layer", "geo", "type"        ],
-      [ "layer", "vis", "column"      ],
-      [ "layer", "vis", "mappingType" ],
-      [ "layer", "vis", "rangeType"   ]
+      [ "layer", "geo", "column"       ],
+      [ "layer", "geo", "type"         ],
+      [ "layer", "vis", "column"       ],
+      [ "layer", "vis", "mappingType"  ],
+      [ "layer", "vis", "rangeType"    ],
+      [ "layer", "vis", "colorNum"     ],
+      [ "layer", "vis", "colorPalette" ]
     ].every(getIn.bind(null, this.props));
 
     if (canRenderVisualization) {

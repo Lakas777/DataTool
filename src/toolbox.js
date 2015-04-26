@@ -85,7 +85,7 @@ var ToolboxVisData = CreateClass({
     }),
 
     Reflux.connectFilter(DocumentStore, "columns", function(data) {
-      var fileId   = layerFromId(data, this.props.layerId).fileId;
+      var fileId   = getIn(layerFromId(data, this.props.layerId), "fileId");
       var filtered = data.files.filter(function(file) { return fileId === file.id; });
       var columns  = columnsFromFile(getIn(filtered, 0));
 
@@ -103,7 +103,9 @@ var ToolboxVisData = CreateClass({
   },
 
   render: function() {
-    return React.DOM.div(
+    var shouldRender = this.state.columns.length > 0;
+
+    return shouldRender ? React.DOM.div(
       { className: "panel panel-default " },
       React.DOM.div(
         { className: "panel-heading" },
@@ -151,7 +153,7 @@ var ToolboxVisData = CreateClass({
           data:        Config.colors.palettes
         })
       )
-    );
+    ) : null;
   }
 });
 
@@ -162,7 +164,7 @@ var ToolboxGeoData = CreateClass({
     }),
 
     Reflux.connectFilter(DocumentStore, "columns", function(data) {
-      var fileId   = layerFromId(data, this.props.layerId).fileId;
+      var fileId   = getIn(layerFromId(data, this.props.layerId), "fileId");
       var filtered = data.files.filter(function(file) { return fileId === file.id; });
       var columns  = columnsFromFile(getIn(filtered, 0));
 
@@ -180,7 +182,9 @@ var ToolboxGeoData = CreateClass({
   },
 
   render: function() {
-    return React.DOM.div(
+    var shouldRender = this.state.columns.length > 0;
+
+    return shouldRender ? React.DOM.div(
       { className: "panel panel-default " },
       React.DOM.div(
         { className: "panel-heading" },
@@ -205,7 +209,7 @@ var ToolboxGeoData = CreateClass({
           data:        Config.dataTypes
         })
       )
-    );
+    ) : null;
   }
 });
 
@@ -216,9 +220,18 @@ var ToolboxFileChoose = CreateClass({
     }),
 
     Reflux.connectFilter(DocumentStore, "fileId", function(data) {
-      return layerFromId(data, this.props.layerId).fileId;
+      return getIn(layerFromId(data, this.props.layerId), "fileId");
     })
   ],
+
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
+
+  componentDidMount: function() {
+    var params = this.context.router.getCurrentParams();
+    DocumentStoreActions.load({ id: params.id });
+  },
 
   onChangeFile: function(fileId) {
     DocumentStoreActions.layerUpdate({
@@ -232,7 +245,7 @@ var ToolboxFileChoose = CreateClass({
       { className: "panel panel-default toolbox-file-choose" },
       React.DOM.div(
         { className: "panel-body form-inline" },
-        Selection({
+        this.state.files.length > 0 ? Selection({
           name:           "Arkusz",
           className:      "col-sm-9",
           labelClassName: "col-sm-2",
@@ -241,7 +254,7 @@ var ToolboxFileChoose = CreateClass({
           selected:       this.state.fileId,
           nameGetter:     function(d) { return d.name; },
           valueGetter:    function(d) { return d.id; }
-        })
+        }) : null
       )
     );
   }
@@ -252,8 +265,8 @@ var ToolboxTab = CreateClass({
     return React.DOM.div(
       { className: "toolbox-tab" },
       ToolboxFileChoose({ layerId: this.props.layerId }),
-        ToolboxGeoData({ key: "geodata", layerId: this.props.layerId }),
-        ToolboxVisData({ key: "visdata", layerId: this.props.layerId })
+      ToolboxGeoData({ layerId: this.props.layerId }),
+      ToolboxVisData({ layerId: this.props.layerId })
     );
   }
 });
@@ -317,6 +330,10 @@ var ToolboxRenameModal = CreateClass({
 
 var Toolbox = React.createClass({
   mixins: [
+    Reflux.connectFilter(DocumentStore, "files", function(data) {
+      return getIn(data, "files", []);
+    }),
+
     Reflux.connectFilter(DocumentStore, "layers", function(data) {
       return getIn(data, "layers", []);
     })
@@ -376,31 +393,37 @@ var Toolbox = React.createClass({
     );
   },
 
+  renderTabs: function() {
+    return Tabs(
+      { titleGetter: this.renderTabTitle },
+      this.state.layers
+        .map(function(tab, index) {
+          return ToolboxTab({
+            key:     index,
+            name:    tab.name,
+            layerId: tab.id
+          });
+        })
+        .concat([
+          ToolboxNewLayer({
+            key:       "new-layer-tab-button",
+            name:      "+",
+            className: "new-layer-tab-button"
+          })
+        ])
+    );
+  },
+
   render: function() {
+    var shouldRender = this.state.files.length > 0;
+
     return React.DOM.div(
       { className: "toolbox" },
       CSSTransitionGroup(
         { transitionName: "fade" },
         this.state.modal ? React.DOM.div({ key: "modal" }, this.state.modal) : null
       ),
-      Tabs(
-        { titleGetter: this.renderTabTitle },
-        this.state.layers
-          .map(function(tab, index) {
-            return ToolboxTab({
-              key:     index,
-              name:    tab.name,
-              layerId: tab.id
-            });
-          })
-          .concat([
-            ToolboxNewLayer({
-              key:       "new-layer-tab-button",
-              name:      "+",
-              className: "new-layer-tab-button"
-            })
-          ])
-      )
+      shouldRender ? this.renderTabs() : null
     );
   }
 });
