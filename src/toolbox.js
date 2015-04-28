@@ -17,8 +17,8 @@ var Modal                  = React.createFactory(require("./modal"));
 var Selection              = React.createFactory(require("./selection"));
 var Tabs                   = React.createFactory(require("./tabs"));
 
-var getIn                  = require("./lib/insides").getIn;
-var buildObject            = require("./lib/insides").buildObject;
+var getIn                  = require("insides").getIn;
+var buildObject            = require("insides").buildObject;
 var objectWithoutEmptyKeys = require("./addons/object-without-empty-keys");
 
 var layerFromId = function(data, layerId) {

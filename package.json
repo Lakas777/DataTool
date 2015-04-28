@@ -15,6 +15,7 @@
     "extend": "^2.0.0",
     "fixed-data-table": "^0.1.2",
     "gulp-watch": "^4.2.2",
+    "insides": "0.0.2",
     "object-assign": "^2.0.0",
     "react": "^0.13.1",
     "react-router": "^0.13.2",
@@ -37,6 +38,7 @@
     "gulp-uglify": "^1.1.0",
     "gulp-util": "^3.0.4",
     "less": "^2.4.0",
+    "merge-stream": "^0.1.7",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.0.0"

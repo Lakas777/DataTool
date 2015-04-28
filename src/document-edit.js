@@ -1,9 +1,10 @@
 var extend               = require("extend");
 var React                = require("react");
+var OnResize             = require("react-window-mixins").OnResize;
 var CreateClass          = require("./addons/create-class");
 var CSSTransitionGroup   = require("./addons/css-transition-group");
 
-var getIn                = require("./lib/insides").getIn;
+var getIn                = require("insides").getIn;
 var indexOfProp          = require("./addons/index-of-prop");
 
 var Reflux               = require("reflux");
@@ -18,10 +19,26 @@ var Toolbox              = React.createFactory(require("./toolbox"));
 var Visualization        = React.createFactory(require("./visualization"));
 
 var LeftView = CreateClass({
+  mixins: [ OnResize ],
+
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
+
   render: function() {
+    var width  = this.state.window.width / 2;
+    var height = this.state.window.height / 2;
+    var params = this.context.router.getCurrentParams();
+
+    if (height > 0) { height = height - 30; }
+
     return React.DOM.div(
       { className: "left" },
-      Visualization(),
+      Visualization({
+        documentId: params.id,
+        width:      width,
+        height:     height
+      }),
       Toolbox()
     );
   }

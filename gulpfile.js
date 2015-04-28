@@ -9,6 +9,7 @@ var gulpif       = require("gulp-if");
 var jslint       = require("gulp-jslint");
 var less         = require("gulp-less");
 var log          = require("gulp-util").log;
+var merge        = require("merge-stream");
 var minifycss    = require("gulp-minify-css");
 var rename       = require("gulp-rename");
 var source       = require("vinyl-source-stream");
@@ -23,46 +24,52 @@ var error = function(error) {
 
 var bundle = function(options) {
   var runWatchify = options ? options.watchify : false;
-  var filePath    = "./src/app.js";
-  var fileDest    = "./public/";
-  var bundler;
 
-  if (runWatchify) {
-    bundler = watchify(browserify(filePath, watchify.args));
-  }
-  else {
-    bundler = browserify(filePath);
-  }
+  var streams = [
+    { path: "./src/app.js",    dest: "./public/", name: "app.js",    key: "app" },
+    { path: "./src/iframe.js", dest: "./public/", name: "iframe.js", key: "iframe" }
+  ].map(function(file) {
+    var bundler;
 
-  bundler.on("log", function(data) {
-    var logString = data.split(" ").map(function(word) {
-      word = word.replace(/\(|\)/g, "");
-      return !isNaN(word) ? chalk.magenta(word) : word;
-    }).join(" ");
-
-    log(chalk.cyan("browserify") + " " + logString);
-  });
-
-  var rebundle = function() {
-    if (process.env.NODE_ENV === "production") {
-      log(chalk.cyan("browserify") + " running with uglify");
+    if (runWatchify) {
+      bundler = watchify(browserify(file.path, watchify.args));
+    }
+    else {
+      bundler = browserify(file.path);
     }
 
-    return bundler
-      .bundle()
-      .on("error", error)
-      .pipe(source("app.web.js"))
-      .pipe(gulpif(process.env.NODE_ENV === "production", buffer()))
-      .pipe(gulpif(process.env.NODE_ENV === "production", uglify()))
-      .pipe(chmod(644))
-      .pipe(gulp.dest(fileDest));
-  };
+    bundler.on("log", function(data) {
+      var logString = data.split(" ").map(function(word) {
+        word = word.replace(/\(|\)/g, "");
+        return !isNaN(word) ? chalk.magenta(word) : word;
+      }).join(" ");
 
-  if (runWatchify) {
-    bundler.on("update", rebundle);
-  }
+      log(chalk.cyan("browserify " + file.key) + " " + logString);
+    });
 
-  return rebundle();
+    var rebundle = function() {
+      if (process.env.NODE_ENV === "production") {
+        log(chalk.cyan("browserify") + " running with uglify");
+      }
+
+      return bundler
+        .bundle()
+        .on("error", error)
+        .pipe(source(file.name))
+        .pipe(gulpif(process.env.NODE_ENV === "production", buffer()))
+        .pipe(gulpif(process.env.NODE_ENV === "production", uglify()))
+        .pipe(chmod(644))
+        .pipe(gulp.dest(file.dest));
+    };
+
+    if (runWatchify) {
+      bundler.on("update", rebundle);
+    }
+
+    return rebundle();
+  });
+
+  return merge(streams);
 };
 
 var compile = function() {

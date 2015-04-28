@@ -1,7 +1,6 @@
 /*jslint unparam: true */
 
 var React                = require("react");
-var OnResize             = require("react-window-mixins").OnResize;
 var d3                   = require("d3");
 var topojson             = require("topojson");
 var colorbrewer          = require("colorbrewer");
@@ -14,7 +13,7 @@ var Reflux               = require("reflux");
 var DocumentStore        = require("./store").DocumentStore;
 var DocumentStoreActions = require("./store").DocumentStoreActions;
 
-var getIn                = require("./lib/insides").getIn;
+var getIn                = require("insides").getIn;
 var indexOfProp          = require("./addons/index-of-prop");
 
 var stringToNumber = function(string) {
@@ -411,8 +410,6 @@ var Visualization = CreateClass({
 
 var VisualizationWrapper = React.createClass({
   mixins: [
-    OnResize,
-
     Reflux.connectFilter(DocumentStore, "files", function(data) {
       return getIn(data, "files", []);
     }),
@@ -422,17 +419,12 @@ var VisualizationWrapper = React.createClass({
     })
   ],
 
-  contextTypes: {
-    router: React.PropTypes.func.isRequired
-  },
-
   getInitialState: function() {
     return { layerIndex: 0 };
   },
 
   componentDidMount: function() {
-    var params = this.context.router.getCurrentParams();
-    DocumentStoreActions.load({ id: params.id });
+    DocumentStoreActions.load({ id: this.props.documentId });
   },
 
   onClickLayer: function(layerIndex) {
@@ -440,18 +432,13 @@ var VisualizationWrapper = React.createClass({
   },
 
   render: function() {
-    var width  = this.state.window.width / 2;
-    var height = this.state.window.height / 2;
-
-    if (height > 0) { height = height - 30; }
-
     var layer  = getIn(this.state.layers, this.state.layerIndex);
 
     return React.DOM.div(
       { className: "visualization-wrapper" },
       Visualization({
-        width:  width,
-        height: height,
+        width:  this.props.width,
+        height: this.props.height,
         files:  this.state.files,
         layer:  layer
       }),
