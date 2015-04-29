@@ -1,6 +1,8 @@
 var colorbrewer = require("colorbrewer");
 
 module.exports = {
+  websiteUrl: process.env.DOMAIN,
+
   visualization: {
     animationDuration: 500,
     legendRectSize:    20,

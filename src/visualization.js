@@ -117,6 +117,13 @@ var Visualization = CreateClass({
     var columnVis   = this.props.layer.vis.column;
     var mappingType = this.props.layer.vis.mappingType;
 
+    var calculate = {
+      avg: function(d) { return d.sum / d.count; },
+      max: function(d) { return d.max; },
+      min: function(d) { return d.min; },
+      sum: function(d) { return d.sum; }
+    };
+
     data = data
       .reduce(function(memo, d) {
         var index = indexOfProp(memo, "geo", d[columnGeo]);
@@ -142,13 +149,6 @@ var Visualization = CreateClass({
         return memo;
       }, [])
       .map(function(d) {
-        var calculate = {
-          avg: function(d) { return d.sum / d.count; },
-          max: function(d) { return d.max; },
-          min: function(d) { return d.min; },
-          sum: function(d) { return d.sum; }
-        };
-
         return {
           value: calculate[mappingType](d),
           geo:   d.geo
@@ -178,7 +178,7 @@ var Visualization = CreateClass({
 
     var colors          = this.getColors();
     var data            = this.getData();
-    var domain          = this.getDomain();
+    var domain          = this.getDomain(data);
 
     var dataType        = getIn(Config.dataTypes, indexOfProp(Config.dataTypes, "key", this.props.layer.geo.type));
     var geoAccessor     = getIn(dataType, "accessor");
@@ -336,7 +336,8 @@ var Visualization = CreateClass({
       var text      = triangle.select("text");
       var rangeType = this.props.layer.vis.rangeType;
 
-      var domain    = this.getDomain();
+      var data      = this.getData();
+      var domain    = this.getDomain(data);
       var colors    = this.getColors();
 
       var width     = this.props.width;
