@@ -220,7 +220,7 @@ var ToolboxFileChoose = CreateClass({
     }),
 
     Reflux.connectFilter(DocumentStore, "fileId", function(data) {
-      return getIn(layerFromId(data, this.props.layerId), "fileId");
+      return getIn(layerFromId(data, this.props.layerId), "fileId", null);
     })
   ],
 
@@ -241,11 +241,13 @@ var ToolboxFileChoose = CreateClass({
   },
 
   render: function() {
+    var shouldRender = this.state.files.length > 0 && this.state.fileId !== null;
+
     return React.DOM.div(
       { className: "panel panel-default toolbox-file-choose" },
       React.DOM.div(
         { className: "panel-body form-inline" },
-        this.state.files.length > 0 ? Selection({
+        shouldRender ? Selection({
           name:           "Arkusz",
           className:      "col-sm-9",
           labelClassName: "col-sm-2",

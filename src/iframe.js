@@ -35,8 +35,6 @@ var VisualizationWrapper = React.createClass({
       this.state.height > 0
     ].every(function(value) { return value; });
 
-    console.log(this.state);
-
     return React.DOM.div(
       null,
       canRenderVisualization ? Visualization({
@@ -48,6 +46,4 @@ var VisualizationWrapper = React.createClass({
   }
 });
 
-var Element = React.createElement(VisualizationWrapper);
-
-React.render(Element, document.body);
+React.render(React.createElement(VisualizationWrapper), document.body);

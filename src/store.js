@@ -139,7 +139,7 @@ var DocumentStore = Reflux.createStore({
 
     if (index >= 0) {
       // changing fileId in layer should reset this layer to default values
-      if (data.fileId !== undefined) {
+      if (data.fileId !== undefined && data.fileId !== document.layers[index].fileId) {
         document.layers[index] = extendEmtpyLayer({
           fileId: data.fileId,
           id:     document.layers[index].id,

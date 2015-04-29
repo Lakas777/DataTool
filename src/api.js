@@ -24,7 +24,7 @@ var TestData = {
           column:       "KACZYŃSKI Jarosław Aleksander",
           mappingType:  "avg",
           rangeType:    "percentage",
-          colorNum:     "7",
+          colorNum:     7,
           colorPalette: "Blues"
         }
       },
