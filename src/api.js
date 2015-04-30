@@ -82,6 +82,8 @@ module.exports = {
     }
   },
 
+  // TODO: when renaming document from list only name goes in here
+  // this could possibly destroy existing document?
   updateDocument: function(document, callback) {
     console.log("API updateDocument", document);
     if (callback) { callback(); }
@@ -95,5 +97,10 @@ module.exports = {
         id:   MD5((new Date()).getTime())
       });
     }
+  },
+
+  removeDocument: function(id, callback) {
+    console.log("API removeDocument", id);
+    callback();
   }
 };

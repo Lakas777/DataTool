@@ -2,13 +2,16 @@ var Reflux      = require("reflux");
 var Api         = require("./api");
 
 var extend      = require("extend");
+var getIn       = require("insides").getIn;
 var indexOfProp = require("./addons/index-of-prop");
 
 // Documents list
 
 var DocumentsStoreActions = Reflux.createActions([
   "load",
-  "create"
+  "create",
+  "update",
+  "remove"
 ]);
 
 var DocumentsStore = Reflux.createStore({
@@ -30,6 +33,25 @@ var DocumentsStore = Reflux.createStore({
   onCreate: function(document) {
     Api.createDocument(document, function(document) {
       this.documents.push(document);
+      this.trigger(this.documents);
+    }.bind(this));
+  },
+
+  onUpdate: function(updatedDocument) {
+    var index    = indexOfProp(this.documents, "id", updatedDocument.id);
+    var document = extend(true, {}, this.documents[index], updatedDocument);
+
+    Api.updateDocument(document, function() {
+      this.documents[index] = document;
+      this.trigger(this.documents);
+    }.bind(this));
+  },
+
+  onRemove: function(document) {
+    var index = indexOfProp(this.documents, "id", document.id);
+
+    Api.removeDocument(this.documents[index].id, function() {
+      this.documents.splice(index, 1);
       this.trigger(this.documents);
     }.bind(this));
   }

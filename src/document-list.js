@@ -1,3 +1,4 @@
+var extend                = require("extend");
 var React                 = require("react");
 var LinkedStateMixin      = require("react/addons").addons.LinkedStateMixin;
 
@@ -8,25 +9,8 @@ var Reflux                = require("reflux");
 var DocumentsStoreActions = require("./store").DocumentsStoreActions;
 var DocumentsStore        = require("./store").DocumentsStore;
 
+var Link                  = React.createFactory(require("react-router").Link);
 var Modal                 = React.createFactory(require("./modal"));
-
-var DocumentRow = CreateClass({
-  onClickRow: function() {
-    if (this.props.onClickRow) { this.props.onClickRow(this.props.document); }
-  },
-
-  render: function() {
-    var document = this.props.document;
-
-    var row = [
-      document.name
-    ].map(function(child, index) {
-      return React.DOM.td({ onClick: this.onClickRow, key: index }, child);
-    }.bind(this));
-
-    return React.DOM.tr({ className: "document-row" }, row);
-  }
-});
 
 var DocumentNewModal = CreateClass({
   mixins: [ LinkedStateMixin ],
@@ -83,6 +67,152 @@ var DocumentNewModal = CreateClass({
   }
 });
 
+var DocumentRenameModal = CreateClass({
+  mixins: [ LinkedStateMixin ],
+
+  getInitialState: function() {
+    return { name: this.props.name };
+  },
+
+  onClickClose: function() {
+    this.props.onClickClose();
+  },
+
+  onClickSave: function() {
+    DocumentsStoreActions.update({
+      id:   this.props.documentId,
+      name: this.state.name
+    });
+
+    this.props.onClickSave();
+  },
+
+  render: function() {
+    var body = React.DOM.div(
+      { className: "form-inline new-document-form-group" },
+      React.DOM.div(
+        { className: "form-group col-md-12" },
+        React.DOM.label({ className: "col-md-2" }, "Nazwa"),
+        React.DOM.input({ type: "text", className: "col-md-4 form-control", valueLink: this.linkState("name") })
+      )
+    );
+
+    var footer = React.DOM.div(
+      { className: "col-md-6 col-md-offset-3" },
+      React.DOM.div(
+        {
+          className: "btn btn-default col-md-5",
+          onClick:   this.onClickClose
+        },
+        "Anuluj"
+      ),
+      React.DOM.div(
+        {
+          className: "btn btn-success col-md-5 col-md-offset-2",
+          onClick:   this.onClickSave
+        },
+        "Zapisz"
+      )
+    );
+
+    return Modal({
+      title:        "Zmień nazwę dokumentu",
+      body:         body,
+      footer:       footer,
+      onClickClose: this.onClickClose
+    });
+  }
+});
+
+var DocumentDeleteModal = CreateClass({
+  onClickClose: function() {
+    this.props.onClickClose();
+  },
+
+  onClickDelete: function() {
+    DocumentsStoreActions.remove({
+      id: this.props.documentId
+    });
+
+    this.props.onClickDelete();
+  },
+
+  render: function() {
+    var footer = React.DOM.div(
+      { className: "col-md-6 col-md-offset-3" },
+      React.DOM.div(
+        {
+          className: "btn btn-default col-md-5",
+          onClick:   this.onClickClose
+        },
+        "Anuluj"
+      ),
+      React.DOM.div(
+        {
+          className: "btn btn-danger col-md-5 col-md-offset-2",
+          onClick:   this.onClickDelete
+        },
+        "Usuń"
+      )
+    );
+
+    return Modal({
+      title:        "Na pewno usunąć dokument \"" + this.props.name + "\"?",
+      footer:       footer,
+      onClickClose: this.onClickClose
+    });
+  }
+});
+
+var DocumentRow = CreateClass({
+  getInitialState: function() {
+    return { modal: null };
+  },
+
+  onClickCloseModal: function() {
+    this.setState({ modal: null });
+  },
+
+  onClickRename: function() {
+    var modal = DocumentRenameModal({
+      documentId:   this.props.document.id,
+      name:         this.props.document.name,
+      onClickSave:  this.onClickCloseModal,
+      onClickClose: this.onClickCloseModal
+    });
+
+    this.setState({ modal: modal });
+  },
+
+  onClickDelete: function() {
+    var modal = DocumentDeleteModal({
+      documentId:    this.props.document.id,
+      name:          this.props.document.name,
+      onClickDelete: this.onClickCloseModal,
+      onClickClose:  this.onClickCloseModal
+    });
+
+    this.setState({ modal: modal });
+  },
+
+  render: function() {
+    var document = this.props.document;
+
+    var deleteButton = React.DOM.span({ className: "btn btn-xs btn-default", onClick: this.onClickDelete }, "✕");
+    var renameButton = React.DOM.span({ className: "btn btn-xs btn-default", onClick: this.onClickRename }, "✎");
+
+    return React.DOM.div(
+      { className: "list-group-item" },
+      Link({ to: "document", params: { id: document.id } }, document.name),
+      React.DOM.div({ className: "document-edit-buttons btn-group" }, renameButton, deleteButton),
+      CSSTransitionGroup(
+        { transitionName: "fade" },
+        this.state.modal ? React.DOM.div({ key: "modal" }, this.state.modal) : null
+      )
+    );
+  }
+});
+
 var DocumentList = React.createClass({
   mixins: [ Reflux.connect(DocumentsStore, "data") ],
 
@@ -96,10 +226,6 @@ var DocumentList = React.createClass({
 
   componentDidMount: function() {
     DocumentsStoreActions.load();
-  },
-
-  onClickRow: function(document) {
-   this.context.router.transitionTo("document", { id: document.id });
   },
 
   onClickCloseModal: function() {
@@ -121,27 +247,15 @@ var DocumentList = React.createClass({
 
   render: function() {
     return React.DOM.div(
-      { className: "document-list" },
-      React.DOM.table(
-        { className: "table table-bordered table-hover" },
-        React.DOM.thead(
-          null,
-          React.DOM.tr(
-            null,
-            [ "Dokument", "" ].map(function(text, index) {
-              return React.DOM.th({ key: index }, text);
-            })
-          )
-        ),
-        React.DOM.tbody(
-          null,
-          this.state.data.map(function(document, index) {
-            return DocumentRow({ key: index, document: document, onClickRow: this.onClickRow });
-          }.bind(this))
-        )
+      { className: "document-list col-md-4 col-md-offset-4" },
+      React.DOM.div(
+        { className: "list-group" },
+        this.state.data.map(function(document, index) {
+          return DocumentRow({ key: index, document: document });
+        }.bind(this))
       ),
       React.DOM.div(
-        { className: "btn btn-primary col-md-2 col-md-offset-5", onClick: this.onClickNew },
+        { className: "btn btn-primary col-md-12", onClick: this.onClickNew },
         "Nowy dokument"
       ),
       CSSTransitionGroup(
