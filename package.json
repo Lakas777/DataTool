@@ -4,7 +4,8 @@
   "main": "app.js",
   "scripts": {
     "start": "gulp",
-    "lint": "gulp lint"
+    "lint": "gulp lint",
+    "dist": "gulp dist"
   },
   "dependencies": {
     "MD5": "^1.2.1",
