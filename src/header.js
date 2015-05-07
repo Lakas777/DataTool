@@ -27,8 +27,8 @@ var GenerateIframeModal = CreateClass({
     var iframeHtml = "";
 
     iframeHtml += "<iframe src=\"";
-    iframeHtml += Config.websiteUrl;
-    iframeHtml += "/iframe.html?id=";
+    iframeHtml += Config.domainURL;
+    iframeHtml += "/front_app/iframe.html?id=";
     iframeHtml += this.state.documentId;
     iframeHtml += " width=\"" + this.state.iframeWidth + "\"";
     iframeHtml += " height=\"" + this.state.iframeHeight + "\"";

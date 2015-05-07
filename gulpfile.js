@@ -24,6 +24,7 @@ var error = function(error) {
 
 var bundle = function(options) {
   var runWatchify = options ? options.watchify : false;
+  var runUglify   = options ? options.uglify : false;
 
   var streams = [
     { path: "./src/app.js",    dest: "./public/", name: "app.js",    key: "app" },
@@ -48,7 +49,7 @@ var bundle = function(options) {
     });
 
     var rebundle = function() {
-      if (process.env.NODE_ENV === "production") {
+      if (runUglify === "production") {
         log(chalk.cyan("browserify") + " running with uglify");
       }
 
@@ -56,8 +57,8 @@ var bundle = function(options) {
         .bundle()
         .on("error", error)
         .pipe(source(file.name))
-        .pipe(gulpif(process.env.NODE_ENV === "production", buffer()))
-        .pipe(gulpif(process.env.NODE_ENV === "production", uglify()))
+        .pipe(gulpif(runUglify, buffer()))
+        .pipe(gulpif(runUglify, uglify()))
         .pipe(chmod(644))
         .pipe(gulp.dest(file.dest));
     };
@@ -115,7 +116,7 @@ var copy = function() {
   return gulp.src("./data/*").pipe(gulp.dest("./public/data/"));
 };
 
-gulp.task("browserify", function() { return bundle();                   });
+gulp.task("browserify", function() { return bundle({ uglify: true });   });
 gulp.task("watchify",   function() { return bundle({ watchify: true }); });
 gulp.task("less",       function() { return compile();                  });
 gulp.task("lint",       function() { return lint();                     });
@@ -128,4 +129,5 @@ gulp.task("watch", function() {
 });
 
 gulp.task("default", [ "copy", "lint", "less", "watchify", "watch", "server" ]);
+gulp.task("compile", [ "copy", "lint", "less", "watchify", "watch" ]);
 gulp.task("dist",    [ "copy", "browserify", "less" ]);

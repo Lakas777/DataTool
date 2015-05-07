@@ -1,7 +1,7 @@
 var colorbrewer = require("colorbrewer");
 
 module.exports = {
-  websiteUrl: process.env.DOMAIN,
+  domainURL: "http://localhost:3000",
 
   visualization: {
     animationDuration: 500,
@@ -24,8 +24,8 @@ module.exports = {
   ],
 
   rangeTypes: [
-    { name: "0.0 - 1.0", key: "normalized" },
     { name: "0% - 100%", key: "percentage" },
+    { name: "0.0 - 1.0", key: "normalized" },
     { name: "min - max", key: "minmax"     }
   ],
 

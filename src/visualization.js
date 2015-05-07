@@ -164,7 +164,7 @@ var Visualization = CreateClass({
     var url   = getIn(Config.dataTypes, [ index, "url" ]);
 
     if (url) {
-      d3.json(url, callback);
+      d3.json(Config.domainURL + "/" + url, callback);
     }
     else {
       callback(new Error("no url"));

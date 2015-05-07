@@ -1,106 +1,118 @@
-var MD5 = require("MD5");
-var d3  = require("d3");
-var dsv = d3.dsv(";");
+var extend            = require("extend");
+var hyperquest        = require("hyperquest");
+var objectWithoutKeys = require("./addons/object-without-keys");
 
-var TestData = {
-  documents: [
-    { name: "test 1", id: "did0001" },
-    { name: "test 2", id: "did0002" }
-  ],
+var domainURL         = require("./config").domainURL;
 
-  document: {
-    name:  "test document",
-    id:    "did0001",
-    layers: [
-      {
-        id:       "lid0001",
-        name:     "Kaczyński",
-        fileId:   "fid0002",
-        geo:      {
-          column: "Województwo",
-          type:   "province"
-        },
-        vis:      {
-          column:       "KACZYŃSKI Jarosław Aleksander",
-          mappingType:  "avg",
-          rangeType:    "percentage",
-          colorNum:     7,
-          colorPalette: "Blues"
-        }
-      },
-      {
-        id:       "lid0002",
-        name:     "Komorowski",
-        fileId:   "fid0001",
-        geo:      {
-          column: "Województwo",
-          type:   "province"
-        },
-        vis:      {
-          column:       "KOMOROWSKI Bronisław Maria",
-          mappingType:  "avg",
-          rangeType:    "percentage",
-          colorNum:     "7",
-          colorPalette: "Blues"
-        }
-      }
-    ],
-    files: [
-      { name: "file 1", id: "fid0001", data: [] },
-      { name: "file 2", id: "fid0002", data: [] },
-      { name: "file 3", id: "fid0003", data: [] }
-    ]
-  },
+// var d3         = require("d3");
+// var dsv        = d3.dsv(";");
+// var TestData = {
+//   documents: [
+//     { name: "test 1", id: "did0001" },
+//     { name: "test 2", id: "did0002" }
+//   ],
+//
+//   document: {
+//     name:  "test document",
+//     id:    "did0001",
+//     layers: [
+//       {
+//         id:       "lid0001",
+//         name:     "Kaczyński",
+//         fileId:   "fid0002",
+//         geo:      {
+//           column: "Województwo",
+//           type:   "province"
+//         },
+//         vis:      {
+//           column:       "KACZYŃSKI Jarosław Aleksander",
+//           mappingType:  "avg",
+//           rangeType:    "percentage",
+//           colorNum:     7,
+//           colorPalette: "Blues"
+//         }
+//       },
+//       {
+//         id:       "lid0002",
+//         name:     "Komorowski",
+//         fileId:   "fid0001",
+//         geo:      {
+//           column: "Województwo",
+//           type:   "province"
+//         },
+//         vis:      {
+//           column:       "KOMOROWSKI Bronisław Maria",
+//           mappingType:  "avg",
+//           rangeType:    "percentage",
+//           colorNum:     "7",
+//           colorPalette: "Blues"
+//         }
+//       }
+//     ],
+//     files: [
+//       { name: "file 1", id: "fid0001", data: [] },
+//       { name: "file 2", id: "fid0002", data: [] },
+//       { name: "file 3", id: "fid0003", data: [] }
+//     ]
+//   },
+//
+//   newDocument: {
+//     name:   "new document",
+//     id:     "newdid0001",
+//     layers: [],
+//     files:  []
+//   }
+// };
 
-  newDocument: {
-    name:   "new document",
-    id:     "newdid0001",
-    layers: [],
-    files:  []
+var parse = function(callback, data) {
+  if (callback) {
+    data = (typeof data === "string") ? JSON.parse(data) : null;
+    callback(data);
   }
 };
 
 module.exports = {
   getDocuments: function(callback) {
-    callback(TestData.documents);
+    hyperquest.get(domainURL + "/data_documents.json")
+      .on("data", parse.bind(null, function(data) {
+        var outData = data.map(function(d) {
+          var inside = JSON.parse(d.data);
+          return extend(true, { id: d.id.$oid }, inside);
+        });
+
+        callback(outData);
+      }));
   },
 
   getDocument: function(id, callback) {
-    if (id === "did0001" || id === "did0002") {
-      dsv("data/sample-data-1.csv", function(error, data) {
-        console.log("API getDocument", id, error);
+    hyperquest.get(domainURL + "/data_documents/" + id + ".json")
+      .on("data", parse.bind(null, function(data) {
+        var inside  = JSON.parse(data.data);
+        var outData = extend(true, { id: data.id.$oid }, inside);
 
-        TestData.document.files.forEach(function(file) {
-          file.data = data;
-        });
-
-        callback(TestData.document);
-      });
-    }
-    else {
-      callback(TestData.newDocument);
-    }
+        callback(outData);
+      }));
   },
 
-  // TODO: when renaming document from list only name goes in here
-  // this could possibly destroy existing document?
   updateDocument: function(document, callback) {
-    console.log("API updateDocument", document);
-    if (callback) { callback(); }
+    var options = { headers: { "Content-Type": "application/json" } };
+    var putBody = JSON.stringify(objectWithoutKeys(document, [ "id" ]));
+
+    hyperquest.put(domainURL + "/data_documents/" + document.id + ".json", options)
+      .on("response", callback)
+      .end(putBody);
   },
 
   createDocument: function(document, callback) {
-    console.log("API createDocument", document);
-    if (callback) {
-      callback({
-        name: document,
-        id:   MD5((new Date()).getTime())
-      });
-    }
+    var params = "data_document[data]=" + JSON.stringify(document);
+
+    hyperquest.post(domainURL + "/data_documents.json?" + params)
+      .on("response", callback)
+      .end();
   },
 
   removeDocument: function(id, callback) {
-    console.log("API removeDocument", id);
-    callback();
+    hyperquest.delete(domainURL + "/data_documents/" + id + ".json")
+      .on("response", callback);
   }
 };

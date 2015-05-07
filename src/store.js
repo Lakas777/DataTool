@@ -24,16 +24,14 @@ var DocumentsStore = Reflux.createStore({
 
   onLoad: function() {
     Api.getDocuments(function(documents) {
-      // TODO: JSON.parse() if needed
       this.documents = documents;
       this.trigger(this.documents);
     }.bind(this));
   },
 
   onCreate: function(document) {
-    Api.createDocument(document, function(document) {
-      this.documents.push(document);
-      this.trigger(this.documents);
+    Api.createDocument(document, function() {
+      this.onLoad();
     }.bind(this));
   },
 
@@ -110,8 +108,7 @@ var DocumentStore = Reflux.createStore({
 
   onLoad: function(args) {
     Api.getDocument(args.id, function(data) {
-      // TODO: JSON.parse() if needed
-      this.document = data;
+      this.document = extend(true, this.document, data);
       this.trigger(this.document);
     }.bind(this));
   },

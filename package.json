@@ -5,7 +5,8 @@
   "scripts": {
     "start": "gulp",
     "lint": "gulp lint",
-    "dist": "gulp dist"
+    "dist": "gulp dist",
+    "compile": "gulp compile"
   },
   "dependencies": {
     "MD5": "^1.2.1",
@@ -16,6 +17,7 @@
     "extend": "^2.0.0",
     "fixed-data-table": "^0.1.2",
     "gulp-watch": "^4.2.2",
+    "hyperquest": "^0.3.0",
     "insides": "0.0.2",
     "object-assign": "^2.0.0",
     "react": "^0.13.1",
