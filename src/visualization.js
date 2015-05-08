@@ -56,7 +56,7 @@ var LayerChooser = CreateClass({
   render: function() {
     return React.DOM.div(
       { className: "layer-chooser btn-group" },
-      this.props.layers.map(this.renderLayer)
+      this.props.layers.length > 1 ? this.props.layers.map(this.renderLayer) : null
     );
   }
 });

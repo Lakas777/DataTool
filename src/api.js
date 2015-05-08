@@ -99,7 +99,7 @@ module.exports = {
     var putBody = JSON.stringify(objectWithoutKeys(document, [ "id" ]));
 
     hyperquest.put(domainURL + "/data_documents/" + document.id + ".json", options)
-      .on("response", callback)
+      .on("response", function() { if (callback) { callback(); } })
       .end(putBody);
   },
 
