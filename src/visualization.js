@@ -389,7 +389,9 @@ var Visualization = CreateClass({
       [ "layer", "vis", "rangeType"    ],
       [ "layer", "vis", "colorNum"     ],
       [ "layer", "vis", "colorPalette" ]
-    ].every(getIn.bind(null, this.props));
+    ].every(function(keys) {
+      return getIn(this.props, keys, null) !== null;
+    }.bind(this));
 
     if (canRenderVisualization) {
       var svg = d3.select(React.findDOMNode(this));

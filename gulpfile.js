@@ -1,11 +1,11 @@
 var autoprefixer = require("gulp-autoprefixer");
 var browserify   = require("browserify");
 var browsersync  = require("browser-sync");
-var buffer       = require("vinyl-buffer");
 var chalk        = require("chalk");
 var chmod        = require("gulp-chmod");
 var gulp         = require("gulp");
 var gulpif       = require("gulp-if");
+var envify       = require("envify/custom");
 var jslint       = require("gulp-jslint");
 var less         = require("gulp-less");
 var log          = require("gulp-util").log;
@@ -13,9 +13,12 @@ var merge        = require("merge-stream");
 var minifycss    = require("gulp-minify-css");
 var rename       = require("gulp-rename");
 var source       = require("vinyl-source-stream");
-var uglify       = require("gulp-uglify");
 var watch        = require("gulp-watch");
 var watchify     = require("watchify");
+
+var productionEnv = {
+  DOMAIN: "http://wdb.media30.usermd.net"
+};
 
 var error = function(error) {
   log(chalk.red(error.message));
@@ -23,8 +26,8 @@ var error = function(error) {
 };
 
 var bundle = function(options) {
-  var runWatchify = options ? options.watchify : false;
-  var runUglify   = options ? options.uglify : false;
+  var runWatchify   = options ? options.watchify : false;
+  var runProduction = options ? options.production : false;
 
   var streams = [
     { path: "./src/app.js",    dest: "./public/", name: "app.js",    key: "app" },
@@ -39,6 +42,10 @@ var bundle = function(options) {
       bundler = browserify(file.path);
     }
 
+    if (runProduction) {
+      bundler.transform(envify(productionEnv));
+    }
+
     bundler.on("log", function(data) {
       var logString = data.split(" ").map(function(word) {
         word = word.replace(/\(|\)/g, "");
@@ -49,16 +56,10 @@ var bundle = function(options) {
     });
 
     var rebundle = function() {
-      if (runUglify === "production") {
-        log(chalk.cyan("browserify") + " running with uglify");
-      }
-
       return bundler
         .bundle()
         .on("error", error)
         .pipe(source(file.name))
-        .pipe(gulpif(runUglify, buffer()))
-        .pipe(gulpif(runUglify, uglify()))
         .pipe(chmod(644))
         .pipe(gulp.dest(file.dest));
     };
@@ -116,12 +117,12 @@ var copy = function() {
   return gulp.src("./data/*").pipe(gulp.dest("./public/data/"));
 };
 
-gulp.task("browserify", function() { return bundle({ uglify: true });   });
-gulp.task("watchify",   function() { return bundle({ watchify: true }); });
-gulp.task("less",       function() { return compile();                  });
-gulp.task("lint",       function() { return lint();                     });
-gulp.task("server",     function() { return server();                   });
-gulp.task("copy",       function() { return copy();                     });
+gulp.task("browserify", function() { return bundle({ production: true }); });
+gulp.task("watchify",   function() { return bundle({ watchify: true });   });
+gulp.task("less",       function() { return compile();                    });
+gulp.task("lint",       function() { return lint();                       });
+gulp.task("server",     function() { return server();                     });
+gulp.task("copy",       function() { return copy();                       });
 
 gulp.task("watch", function() {
   watch("./src/**/*.js", function() { return gulp.start("lint"); });

@@ -1,9 +1,10 @@
-var Reflux      = require("reflux");
-var Api         = require("./api");
+var Reflux            = require("reflux");
+var Api               = require("./api");
 
-var extend      = require("extend");
-var getIn       = require("insides").getIn;
-var indexOfProp = require("./addons/index-of-prop");
+var extend            = require("extend");
+var getIn             = require("insides").getIn;
+var indexOfProp       = require("./addons/index-of-prop");
+var objectWithoutKeys = require("./addons/object-without-keys");
 
 // Documents list
 
@@ -59,8 +60,8 @@ var DocumentsStore = Reflux.createStore({
 
 var extendEmptyDocument = function(data) {
   var EmptyDocument = {
-    name:   undefined,
-    id:     undefined,
+    name:   null,
+    id:     null,
     layers: [],
     files:  []
   };
@@ -70,17 +71,17 @@ var extendEmptyDocument = function(data) {
 
 var extendEmtpyLayer = function(data) {
   var EmptyLayer = {
-    id:            undefined,
-    fileId:        undefined,
-    name:          undefined,
+    id:            null,
+    fileId:        null,
+    name:          null,
     geo: {
-      column:      undefined,
-      type:        undefined
+      column:      null,
+      type:        null
     },
     vis: {
-      column:      undefined,
-      mappingType: undefined,
-      rangeType:   undefined
+      column:      null,
+      mappingType: null,
+      rangeType:   null
     }
   };
 
@@ -108,6 +109,8 @@ var DocumentStore = Reflux.createStore({
 
   onLoad: function(args) {
     Api.getDocument(args.id, function(data) {
+      // console.log(JSON.stringify(this.document), JSON.stringify(data));
+
       this.document = extend(true, this.document, data);
       this.trigger(this.document);
     }.bind(this));
@@ -148,7 +151,7 @@ var DocumentStore = Reflux.createStore({
 
     document.layers = document.layers.concat([ extendEmtpyLayer(data) ]);
 
-    Api.updateDocument(document);
+    Api.updateDocument(objectWithoutKeys(document, [ "files" ]));
     this.trigger(document);
   },
 
@@ -170,7 +173,7 @@ var DocumentStore = Reflux.createStore({
         document.layers[index] = extend(true, {}, document.layers[index], data);
       }
 
-      Api.updateDocument(document);
+      Api.updateDocument(objectWithoutKeys(document, [ "files" ]));
       this.trigger(document);
     }
   },
@@ -183,7 +186,7 @@ var DocumentStore = Reflux.createStore({
       return layer.id !== layerId;
     });
 
-    Api.updateDocument(document);
+    Api.updateDocument(objectWithoutKeys(document, [ "files" ]));
     this.trigger(document);
   }
 });

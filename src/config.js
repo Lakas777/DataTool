@@ -1,7 +1,7 @@
 var colorbrewer = require("colorbrewer");
 
 module.exports = {
-  domainURL: "http://localhost:3000",
+  domainURL: process.env.DOMAIN || "http://localhost:3000",
 
   visualization: {
     animationDuration: 500,
