@@ -35,14 +35,11 @@ var VisualizationWrapper = React.createClass({
       this.state.height > 0
     ].every(function(value) { return value; });
 
-    return React.DOM.div(
-      null,
-      canRenderVisualization ? Visualization({
-        documentId: this.state.documentId,
-        width:      this.state.width,
-        height:     this.state.height
-      }) : null
-    );
+    return canRenderVisualization ? Visualization({
+      documentId: this.state.documentId,
+      width:      this.state.width,
+      height:     this.state.height
+    }) : null;
   }
 });
 
